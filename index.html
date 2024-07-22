@@ -20,7 +20,7 @@
 <body>
 <div class="main">
     <div class="buttons">
-        <button class="jasmine btn" id="add-player">Add Player</button>
+        <button class="jasmine btn" id="add-player">Select players</button>
         <button class="hookers-green btn" id="create-matches">Create matches</button>
     </div>
     <div class="player-list">
@@ -28,7 +28,12 @@
         <div id="player-names"></div> <!-- Container for player names -->
     </div>
     <div class="matches">
-        <div class="matches-list-label label">Matches</div>
+        <div class="matches-header">
+            <div class="matches-list-label label">Matches</div>
+            <button class="btn btn-sm btn-outline-secondary btn-red" id="new-matches">New session</button>
+        </div>
+        <!-- Dedicated container for the matches -->
+        <div id="matches-list"></div>
     </div>
 </div>
 

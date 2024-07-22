@@ -37,7 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
         "Fred Hodges",
         "Peter Hart",
         "Greg Mccabe",
-        "Lloyd Newlands"
+        "Lloyd Newlands",
+        "Z - Guest Player 1",
+        "Z - Guest Player 2",
+        "Z - Guest Player 3",
+        "Z - Guest Player 4"
     ];
     predefinedPlayers.sort((a, b) => a.localeCompare(b));
     const predefinedPlayersList = document.getElementById('predefined-players-list');
@@ -64,6 +68,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const savedData = JSON.parse(localStorage.getItem('matchesData'));
+    if (savedData) {
+        const matchesContainer = document.querySelector('.matches');
+        matchesContainer.innerHTML = '<div class="matches-list-label label">Matches</div>'; // Clear previous matches and add label
+        if (savedData.matches && savedData.matches.length > 0) {
+            savedData.matches.forEach(matchData => {
+                const matchElement = createMatchElement(matchData); // Use your existing function
+                matchesContainer.appendChild(matchElement);
+            });
+        }
+        if (savedData.resting && savedData.resting.length > 0) {
+            const resting = document.createElement('div');
+            resting.classList.add('resting');
+            resting.textContent = `Resting: ${savedData.resting.join(', ')}`;
+            matchesContainer.appendChild(resting);
+        }
+    }
+
     // Add event listener to the "Add Player" button to open the modal
     const addPlayerButton = document.getElementById('add-player');
     addPlayerButton.addEventListener('click', () => {
@@ -71,6 +93,30 @@ document.addEventListener('DOMContentLoaded', () => {
         addPlayerModal.show();
     });
 });
+
+// Function to create a match element from match data
+function createMatchElement(matchData) {
+    const match = document.createElement('div');
+    match.classList.add('match');
+    // Include court number in the match display
+    const courtNumber = document.createElement('div');
+    courtNumber.textContent = `Court ${matchData.court}`;
+    courtNumber.classList.add('court-number');
+    const teamOne = document.createElement('div');
+    teamOne.classList.add('team');
+    teamOne.innerHTML = `<div>${matchData.teamOne[0]}</div><div>${matchData.teamOne[1]}</div>`;
+    const versus = document.createElement('div');
+    versus.classList.add('versus');
+    versus.textContent = 'vs';
+    const teamTwo = document.createElement('div');
+    teamTwo.classList.add('team');
+    teamTwo.innerHTML = `<div>${matchData.teamTwo[0]}</div><div>${matchData.teamTwo[1]}</div>`;
+    match.appendChild(courtNumber);
+    match.appendChild(teamOne);
+    match.appendChild(versus);
+    match.appendChild(teamTwo);
+    return match;
+}
 
 function displayPlayerName(name, container) {
     const playerElement = document.createElement('div'); // Or 'li' if you're using a list
@@ -107,50 +153,50 @@ function shuffleArray(array) {
 
 document.getElementById('create-matches').addEventListener('click', () => {
     const selectedPlayers = Array.from(document.querySelectorAll('.predefined-player.selected')).map(player => player.textContent);
-    shuffleArray(selectedPlayers); // Randomize the order of selected players
-
-    const matchesContainer = document.querySelector('.matches');
-    matchesContainer.innerHTML = '<div class="matches-list-label label">Matches</div>'; // Clear previous matches and add label
-
-    // Create matches
+    shuffleArray(selectedPlayers);
+    // Target the #matches-list for clearing and adding matches
+    const matchesList = document.getElementById('matches-list');
+    matchesList.innerHTML = ''; // Clear only the matches list
+    const matches = [];
+    let restingPlayers = [];
     for (let i = 0; i < selectedPlayers.length; i += 4) {
-        // Inside the loop where matches are created
-        // Inside the loop where matches are created
         if (i + 3 < selectedPlayers.length) {
-            const match = document.createElement('div');
-            match.classList.add('match');
-
-            // Create and append the court number header
-            const courtHeader = document.createElement('div');
-            courtHeader.classList.add('court-header');
-            courtHeader.textContent = `Court ${i / 4 + 1}`;
-            match.appendChild(courtHeader);
-
-            const teamOne = document.createElement('div');
-            teamOne.classList.add('team');
-            teamOne.innerHTML = `<div>${selectedPlayers[i]}</div><div>${selectedPlayers[i + 1]}</div>`;
-
-            const versus = document.createElement('div');
-            versus.classList.add('versus');
-            versus.textContent = 'vs';
-
-            const teamTwo = document.createElement('div');
-            teamTwo.classList.add('team');
-            teamTwo.innerHTML = `<div>${selectedPlayers[i + 2]}</div><div>${selectedPlayers[i + 3]}</div>`;
-
-            match.appendChild(teamOne);
-            match.appendChild(versus);
-            match.appendChild(teamTwo);
-
-            matchesContainer.appendChild(match);
+            const matchData = {
+                court: Math.floor(i / 4) + 1, // Calculate court number
+                teamOne: [selectedPlayers[i], selectedPlayers[i + 1]],
+                teamTwo: [selectedPlayers[i + 2], selectedPlayers[i + 3]]
+            };
+            matches.push(matchData);
+            const matchElement = createMatchElement(matchData);
+            matchesList.appendChild(matchElement); // Append to matches list
         } else {
-            // Handle resting players
-            const restingPlayers = selectedPlayers.slice(i);
+            restingPlayers = selectedPlayers.slice(i);
             const resting = document.createElement('div');
             resting.classList.add('resting');
             resting.textContent = `Resting: ${restingPlayers.join(', ')}`;
-            matchesContainer.appendChild(resting);
+            matchesList.appendChild(resting); // Append to matches list
             break; // Exit the loop as we've handled all players
         }
+    }
+    const dataToSave = {
+        matches: matches,
+        resting: restingPlayers
+    };
+    localStorage.setItem('matchesData', JSON.stringify(dataToSave));
+});
+
+document.getElementById('new-matches').addEventListener('click', () => {
+    const confirmation = confirm("Are you sure you want to start a new session? This will unselect all players and remove all matches.");
+    if (confirmation) {
+        // Unselect all players
+        document.querySelectorAll('.predefined-player.selected').forEach(player => {
+            player.classList.remove('selected');
+        });
+        // Clear only the matches display, preserving the "New" button and header
+        document.getElementById('matches-list').innerHTML = ''; // Clear matches
+        // Clear selected players from localStorage
+        localStorage.removeItem('selectedPlayers');
+        // Optionally, clear the player names display if you have a separate list for that
+        document.getElementById('player-names').innerHTML = '';
     }
 });

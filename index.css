@@ -104,6 +104,17 @@ html, body {
   padding: 10px; /* Adds some padding inside the matches container */
 }
 
+.matches-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.matches-list-label {
+  width: 80%;
+}
+
 #player-names div {
   padding: 5px;
   margin: 5px 0;
@@ -117,6 +128,12 @@ html, body {
 #player-names {
   overflow-y: auto; /* Enables vertical scrolling if needed */
   max-height: 90%; /* Adjust based on your layout, ensures there's a limit to growth */
+}
+
+.btn-red {
+  background-color: var(--dark-red) !important;
+  color: white !important;
+  border-color: #4e1512 !important;;
 }
 
 .btn {
@@ -157,6 +174,7 @@ html, body {
   border-radius: 8px; /* Optional: adds rounded corners */
   border: 1px dotted #777;
 }
+
 .team {
   display: flex;
   flex-direction: column;
