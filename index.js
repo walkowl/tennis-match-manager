@@ -70,9 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const savedData = JSON.parse(localStorage.getItem('matchesData'));
     if (savedData) {
-        const matchesContainer = document.querySelector('.matches');
-        matchesContainer.innerHTML = '<div class="matches-list-label label">Matches</div>'; // Clear previous matches and add label
-        if (savedData.matches && savedData.matches.length > 0) {
+        const matchesContainer = document.getElementById('matches-list');        if (savedData.matches && savedData.matches.length > 0) {
             savedData.matches.forEach(matchData => {
                 const matchElement = createMatchElement(matchData); // Use your existing function
                 matchesContainer.appendChild(matchElement);
