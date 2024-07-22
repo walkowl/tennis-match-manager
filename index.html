@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tennis Match Manager</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="icon" href="./assets/tennis-512.png">
+    <link rel="manifest" href="./manifest.json">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js');
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div class="main">
+    </div>
+    <script src="./index.js"></script>
+  </body>
+</html>
