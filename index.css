@@ -1,3 +1,12 @@
+:root {
+  /* CSS HEX */
+  --oxford-blue: #001427ff;
+  --hookers-green: #708d81ff;
+  --jasmine: #f4d58dff;
+  --engineering-orange: #bf0603ff;
+  --dark-red: #8d0801ff;
+}
+
 @font-face {
   font-family: "Lato-Bold";
   src: url("assets/Lato-Bold.ttf") format("truetype");
@@ -21,6 +30,33 @@ html, body {
   height: 100%; /* Ensure the html and body elements take up the full height */
 }
 
+.jasmine {
+  background-color: var(--jasmine);
+  color: var(--oxford-blue);
+}
+
+.oxford-blue {
+  background-color: var(--oxford-blue);
+  color: var(--jasmine);
+}
+
+.hookers-green {
+  background-color: var(--hookers-green);
+  color: var(--oxford-blue);
+}
+
+.button {
+    border: none;
+    padding: 25px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 12px;
+}
+
 .label {
   text-align: center;
   padding: 10px;
@@ -37,14 +73,28 @@ html, body {
 }
 
 .buttons {
-  background: #DDD;
+  background: #EEE;
   grid-area: 5 / 2 / 6 / 6;
+  display: grid;
+  grid-template-rows: repeat(1, 1fr);
+  grid-template-columns: repeat(4, 1fr);
 }
+
+.button:first-child {
+  grid-column: 1 / 2; /* Place the first button (Add Player) in the second column */
+}
+.button:last-child {
+  grid-column: 4 / 5; /* Place the second button (Create matches) in the third column */
+}
+
 .player-list {
-  background: #CCC;
+  background: #EEE;
   grid-area: 1 / 1 / 6 / 2;
+  border-right: 1px solid #ddd;
 }
+
 .matches {
-  background: #BBB;
+  background: #EEE;
   grid-area: 1 / 2 / 5 / 6;
+  border-bottom: 1px solid #ddd;
 }
