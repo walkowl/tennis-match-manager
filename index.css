@@ -3,8 +3,10 @@
   --oxford-blue: #001427ff;
   --hookers-green: #1dbd78;
   --jasmine: #f4d58dff;
+  --jasmine-light: #e6dbc0;
   --engineering-orange: #bf0603ff;
   --dark-red: #8d0801ff;
+  --dark-grey: #2d3142;
 }
 
 @font-face {
@@ -23,7 +25,7 @@
   font-family: "Lato-Bold", sans-serif;
   font-weight: 700;
   font-style: normal;
-  font-size: 1.1em;
+  font-size: 1.07em;
 }
 
 html, body {
@@ -60,7 +62,7 @@ html, body {
 .label {
   text-align: center;
   padding: 10px;
-
+  font-size: 1.7em;
 }
 
 .main {
@@ -105,8 +107,10 @@ html, body {
 #player-names div {
   padding: 5px;
   margin: 5px 0;
-  background-color: var(--oxford-blue);
-  color: var(--jasmine);
+  color: var(--oxford-blue);
+  background-color: var(--jasmine-light);
+  /*background-color: var(--oxford-blue);*/
+  /*color: var(--jasmine);*/
   text-align: center;
 }
 
@@ -120,9 +124,8 @@ html, body {
 }
 /* Custom button styles to override Bootstrap defaults */
 .btn.jasmine {
-  background-color: var(--jasmine) !important; /* Use !important to ensure override */
-  color: var(--oxford-blue) !important;
-  border-color: var(--jasmine) !important; /* Adjust border color if needed */
+  background-color: var(--dark-grey) !important; /* Use !important to ensure override */
+  color: var(--jasmine-light) !important;
 }
 
 .btn.hookers-green {
@@ -134,7 +137,7 @@ html, body {
 /* If you have other buttons you want to customize, follow the same pattern */
 
 .predefined-player.selected {
-  background-color: #007bff; /* Bootstrap primary color */
+  background-color: var(--dark-grey); /* Bootstrap primary color */
   color: white;
 }
 
@@ -150,8 +153,9 @@ html, body {
   align-items: center;
   margin: 10px 0;
   padding: 10px;
-  background-color: #f0f0f0; /* Light grey background */
+  background-color: #fff; /* Light grey background */
   border-radius: 8px; /* Optional: adds rounded corners */
+  border: 1px dotted #777;
 }
 .team {
   display: flex;
@@ -177,4 +181,5 @@ html, body {
   margin: 10px 0;
   padding: 10px;
   font-size: 1.5em;
+  text-decoration: underline;
 }
