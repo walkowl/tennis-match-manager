@@ -1,32 +1,57 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tennis Match Manager</title>
     <link rel="stylesheet" href="index.css">
     <link rel="icon" href="./assets/tennis-512.png">
     <link rel="manifest" href="./manifest.json">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="js/bootstrap.bundle.min.js"></script>
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js');
-        });
-      }
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js');
+            });
+        }
     </script>
-  </head>
-  <body>
-    <div class="main">
-      <div class="buttons">
-        <button class="button jasmine" id="add-player">Add Player</button>
-        <button class="button hookers-green" id="create-matches">Create matches</button>
-      </div>
-      <div class="player-list">
+</head>
+<body>
+<div class="main">
+    <div class="buttons">
+        <button class="jasmine btn" id="add-player">Add Player</button>
+        <button class="hookers-green btn" id="create-matches">Create matches</button>
+    </div>
+    <div class="player-list">
         <div class="player-list-label label">Players</div>
         <div id="player-names"></div> <!-- Container for player names -->
-      </div>
-      <div class="matches"> <div class="matches-list-label label">Matches</div> </div>
     </div>
-    <script src="./index.js"></script>
-  </body>
+    <div class="matches">
+        <div class="matches-list-label label">Matches</div>
+    </div>
+</div>
+
+<!-- Add Player Modal -->
+<div class="modal fade" id="addPlayerModal" tabindex="-1" aria-labelledby="addPlayerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPlayerModalLabel">Select Players</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Player selection list will be populated here -->
+                <div id="predefined-players-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="save-selected-players">Save Selection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="./index.js"></script>
+</body>
 </html>

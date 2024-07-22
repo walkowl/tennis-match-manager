@@ -45,17 +45,17 @@ html, body {
   color: var(--oxford-blue);
 }
 
-.button {
-    border: none;
-    padding: 25px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 12px;
-}
+/*.button {*/
+/*    border: none;*/
+/*    padding: 25px 32px;*/
+/*    text-align: center;*/
+/*    text-decoration: none;*/
+/*    display: inline-block;*/
+/*    font-size: 16px;*/
+/*    margin: 4px 2px;*/
+/*    cursor: pointer;*/
+/*    border-radius: 12px;*/
+/*}*/
 
 .label {
   text-align: center;
@@ -80,10 +80,10 @@ html, body {
   grid-template-columns: repeat(4, 1fr);
 }
 
-.button:first-child {
+.buttons button:first-child {
   grid-column: 1 / 2; /* Place the first button (Add Player) in the second column */
 }
-.button:last-child {
+.buttons button:last-child {
   grid-column: 4 / 5; /* Place the second button (Create matches) in the third column */
 }
 
@@ -97,6 +97,9 @@ html, body {
   background: #EEE;
   grid-area: 1 / 2 / 5 / 6;
   border-bottom: 1px solid #ddd;
+  overflow-y: auto; /* Enables vertical scrolling if the content overflows */
+  max-height: calc(100vh - 20px); /* Adjust the max-height as needed */
+  padding: 10px; /* Adds some padding inside the matches container */
 }
 
 #player-names div {
@@ -110,4 +113,68 @@ html, body {
 #player-names {
   overflow-y: auto; /* Enables vertical scrolling if needed */
   max-height: 90%; /* Adjust based on your layout, ensures there's a limit to growth */
+}
+
+.btn {
+  font-size: 1.2em !important;
+}
+/* Custom button styles to override Bootstrap defaults */
+.btn.jasmine {
+  background-color: var(--jasmine) !important; /* Use !important to ensure override */
+  color: var(--oxford-blue) !important;
+  border-color: var(--jasmine) !important; /* Adjust border color if needed */
+}
+
+.btn.hookers-green {
+  background-color: var(--hookers-green) !important;
+  color: var(--oxford-blue) !important;
+  border-color: var(--hookers-green) !important;
+}
+
+/* If you have other buttons you want to customize, follow the same pattern */
+
+.predefined-player.selected {
+  background-color: #007bff; /* Bootstrap primary color */
+  color: white;
+}
+
+.predefined-player {
+  cursor: pointer;
+  padding: 3px 10px;
+  border-radius: 10px;
+}
+
+.match {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #f0f0f0; /* Light grey background */
+  border-radius: 8px; /* Optional: adds rounded corners */
+}
+.team {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+.versus {
+  font-weight: bold;
+  margin: 0 20px;
+}
+
+.court-header {
+  font-size: 1.2em;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px; /* Adds some space between the header and the match details */
+}
+
+.resting {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin: 10px 0;
+  padding: 10px;
+  font-size: 1.5em;
 }
