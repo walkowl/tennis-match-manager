@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "Peter Rufford",
         "Pat Dunkin",
         "Mark Bailey",
-        "Reeves John",
+        "John Reeves",
         "Bob Bear",
         "Peter Beiers",
         "Lucas Walkow",
@@ -186,17 +186,25 @@ document.getElementById('create-matches').addEventListener('click', () => {
 });
 
 document.getElementById('new-matches').addEventListener('click', () => {
-    const confirmation = confirm("Are you sure you want to start a new session? This will unselect all players and remove all matches.");
-    if (confirmation) {
-        // Unselect all players
-        document.querySelectorAll('.predefined-player.selected').forEach(player => {
-            player.classList.remove('selected');
-        });
-        // Clear only the matches display, preserving the "New" button and header
-        document.getElementById('matches-list').innerHTML = ''; // Clear matches
-        // Clear selected players from localStorage
-        localStorage.removeItem('selectedPlayers');
-        // Optionally, clear the player names display if you have a separate list for that
-        document.getElementById('player-names').innerHTML = '';
-    }
+    // Show the Bootstrap modal
+    const newSessionModal = new bootstrap.Modal(document.getElementById('newSessionModal'));
+    newSessionModal.show();
+});
+
+document.getElementById('confirmNewSession').addEventListener('click', () => {
+    // This code runs when the "New Session" button in the modal is clicked
+    // Unselect all players
+    document.querySelectorAll('.predefined-player.selected').forEach(player => {
+        player.classList.remove('selected');
+    });
+    // Clear only the matches display, preserving the "New" button and header
+    document.getElementById('matches-list').innerHTML = ''; // Clear matches
+    // Clear selected players from localStorage
+    localStorage.removeItem('selectedPlayers');
+    // Optionally, clear the player names display if you have a separate list for that
+    document.getElementById('player-names').innerHTML = '';
+
+    // Close the modal after performing the actions
+    const newSessionModal = bootstrap.Modal.getInstance(document.getElementById('newSessionModal'));
+    newSessionModal.hide();
 });
