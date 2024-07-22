@@ -1,6 +1,6 @@
 {
   "name": "Tennis Match Manager",
-  "short_name": "TMM",
+  "short_name": "Tennis Match Manager",
   "icons": [
     {
       "src": "./assets/tennis-512.png",
