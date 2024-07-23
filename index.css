@@ -34,7 +34,7 @@ body::before {
 
 .main, .buttons, .player-list, .matches, .modal-content {
   position: relative;
-  z-index: 1;
+  z-index: 10;
 }
 /* If you have specific elements with a solid background that you want to keep, you can individually set their backgrounds. For example, if you want the modal-content background to remain solid: */
 .modal-content {
@@ -140,6 +140,16 @@ html, body {
   padding: 0 10px;
 }
 
+#no-matches-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  text-align: center;
+  font-size: 1.5em; /* Adjust font size as needed */
+  color: var(--oxford-blue); /* Adjust text color as needed */
+}
+
 .matches-list-label {
   width: 80%;
 }
@@ -229,4 +239,11 @@ html, body {
   padding: 10px;
   font-size: 1.5em;
   text-decoration: underline;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1; /* Adjust this value as needed to bring the canvas to the front */
 }

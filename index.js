@@ -90,7 +90,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const addPlayerModal = new bootstrap.Modal(document.getElementById('addPlayerModal'));
         addPlayerModal.show();
     });
+
+    updateNoMatchesMessage();
 });
+
+function updateNoMatchesMessage() {
+    const matchesList = document.getElementById('matches-list');
+    const noMatchesMessage = document.getElementById('no-matches-message');
+    if (matchesList.children.length === 0) {
+        noMatchesMessage.style.display = "flex"; // Show the message if no matches
+    } else {
+        noMatchesMessage.style.display = "none"; // Hide the message if there are matches
+    }
+}
 
 // Function to create a match element from match data
 function createMatchElement(matchData) {
@@ -180,7 +192,63 @@ document.getElementById('create-matches').addEventListener('click', () => {
         resting: restingPlayers
     };
     localStorage.setItem('matchesData', JSON.stringify(dataToSave));
+    updateNoMatchesMessage();
+    createBouncingBalls();
 });
+
+function createBouncingBalls() {
+    // Engine creation
+    let engine = Matter.Engine.create();
+    let world = engine.world;
+    let render = Matter.Render.create({
+        element: document.body,
+        engine: engine,
+        options: {
+            width: window.innerWidth,
+            height: window.innerHeight,
+            wireframes: false, // Set to false to see the tennis balls with colors
+            background: 'transparent'
+        }
+    });
+    // Add walls to the world so balls will bounce off the sides and bottom
+    let ground = Matter.Bodies.rectangle(window.innerWidth / 2, window.innerHeight, window.innerWidth, 10, { isStatic: true });
+    let leftWall = Matter.Bodies.rectangle(0, window.innerHeight / 2, 10, window.innerHeight, { isStatic: true });
+    let rightWall = Matter.Bodies.rectangle(window.innerWidth, window.innerHeight / 2, 10, window.innerHeight, { isStatic: true });
+    Matter.World.add(world, [ground, leftWall, rightWall]);
+    // Function to add a ball
+    function addBall() {
+        let ball = Matter.Bodies.circle(Math.random() * window.innerWidth, -30, 25, {
+            restitution: 1.1, // Bounciness
+            render: {
+                sprite: {
+                    texture: './assets/tennis-ball.png',
+                    xScale: 0.3,
+                    yScale: 0.3
+                }
+            }
+        });
+        Matter.World.add(world, ball);
+        // Make the ball disappear after 3-4 seconds
+        setTimeout(() => {
+            Matter.World.remove(world, ball);
+        }, 10000 + Math.random() * 1000);
+    }
+    // Add several balls for effect
+    for (let i = 0; i < 20; i++) {
+        setTimeout(addBall, i * 50);
+    }
+    // Run the engine and renderer
+    Matter.Engine.run(engine);
+    Matter.Render.run(render);
+    // Stop the engine and renderer after a while
+    setTimeout(() => {
+        Matter.Render.stop(render);
+        Matter.World.clear(world);
+        Matter.Engine.clear(engine);
+        render.canvas.remove();
+        render.textures = {};
+    }, 15000); // Stop everything after 5 seconds
+}
 
 document.getElementById('new-matches').addEventListener('click', () => {
     // Show the Bootstrap modal
@@ -204,4 +272,5 @@ document.getElementById('confirmNewSession').addEventListener('click', () => {
     // Close the modal after performing the actions
     const newSessionModal = bootstrap.Modal.getInstance(document.getElementById('newSessionModal'));
     newSessionModal.hide();
+    updateNoMatchesMessage();
 });
