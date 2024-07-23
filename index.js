@@ -247,7 +247,7 @@ function createBouncingBalls() {
         Matter.Engine.clear(engine);
         render.canvas.remove();
         render.textures = {};
-    }, 10000); // Stop everything after 5 seconds
+    }, 7000); // Stop everything after 5 seconds
 }
 
 document.getElementById('new-matches').addEventListener('click', () => {
