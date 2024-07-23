@@ -234,7 +234,7 @@ function createBouncingBalls() {
         }, 5000 + Math.random() * 1000);
     }
     // Add several balls for effect
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 10; i++) {
         setTimeout(addBall, i * 50);
     }
     // Run the engine and renderer
