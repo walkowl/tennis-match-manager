@@ -299,7 +299,11 @@ document.getElementById('create-matches').addEventListener('click', () => {
     createBouncingBalls();
 });
 
+let ballsRunning = false;
+
 function createBouncingBalls() {
+    if (ballsRunning) return; // Prevent multiple instances
+    ballsRunning = true;
     // Engine creation
     let engine = Matter.Engine.create();
     let world = engine.world;
@@ -354,6 +358,7 @@ function createBouncingBalls() {
         Matter.Engine.clear(engine);
         render.canvas.remove();
         render.textures = {};
+        ballsRunning = false;
     }, 7000); // Stop everything after 5 seconds
 }
 
