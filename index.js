@@ -3,28 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     displayPlayers(players);
     setupEventListeners();
-
-    const predefinedPlayersList = document.getElementById('predefined-players-list');
-
-    players.forEach(player => {
-        const playerElement = document.createElement('div');
-        playerElement.textContent = player;
-        playerElement.classList.add('predefined-player');
-        predefinedPlayersList.appendChild(playerElement);
-    });
-
-    const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers'));
-    if (savedSelectedPlayers && savedSelectedPlayers.length > 0) {
-        const playerNamesContainer = document.getElementById('player-names');
-        savedSelectedPlayers.forEach(playerName => {
-            displayPlayerName(playerName, playerNamesContainer);
-            // Optionally, mark these players as selected in the predefined players list
-            const playerElement = Array.from(document.querySelectorAll('.predefined-player')).find(element => element.textContent === playerName);
-            if (playerElement) {
-                playerElement.classList.add('selected');
-            }
-        });
-    }
+    addSelectedPlayers();
+    markSelectedPredefinedPlayers();
 
     const savedData = JSON.parse(localStorage.getItem('matchesData'));
     if (savedData) {
@@ -51,7 +31,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updateNoMatchesMessage();
+    updatePlayerCount();
 });
+
+function updatePlayerCount() {
+    const playerDivs = document.querySelectorAll('#player-names div');
+    const count = playerDivs.length;
+    const playerCountSpan = document.getElementById("player-count");
+    playerCountSpan.textContent = `(${count})`;
+}
+
+function markSelectedPredefinedPlayers() {
+    const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers'));
+    if (savedSelectedPlayers && savedSelectedPlayers.length > 0) {
+        savedSelectedPlayers.forEach(playerName => {
+            const playerElement = Array.from(document.querySelectorAll('.predefined-player .player-name')).find(element => element.textContent === playerName);
+            console.log(playerElement);
+            if (playerElement) {
+                playerElement.parentElement.classList.add('selected');
+            }
+        });
+    }
+}
+
+function addSelectedPlayers() {
+    const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers'));
+    if (savedSelectedPlayers && savedSelectedPlayers.length > 0) {
+        const playerNamesContainer = document.getElementById('player-names');
+        savedSelectedPlayers.forEach(playerName => {
+            displayPlayerName(playerName, playerNamesContainer);
+        });
+    }
+}
+
 
 function getPlayerFromStorage() {
     let players = JSON.parse(localStorage.getItem('players'));
@@ -69,7 +81,7 @@ function savePlayersInStorage(players) {
 function getPlayerList() {
     let players = getPlayerFromStorage();
     if (!players) {
-        players = ["Rod Berwick", "Bill Wallace", "David Phillips", "Wayne Perry", "Anthony Mina", "Gary Hodgson", "Wal Merak", "Sue Withers", "Tom Sullivan", "Alton Bowen", "Greg Nordsvan", "Stewart Johnston", "Andrus Tonismae", "Dave Williams", "Ian Manning", "Peter Rufford", "Pat Dunkin", "Mark Bailey", "John Reeves", "Bob Bear", "Peter Beiers", "Lucas Walkow", "Allan Large", "Paul Warwick", "Peter Oliver", "Maurie Barry", "Brian Morgan", "Graham Harding", "Peter Amodio", "Ron Graham", "Andrew Kirkup", "John Dring", "Mark Porter", "Ross Leonard", "Fred Hodges", "Peter Hart", "Greg Mccabe", "Lloyd Newlands", "Z - Guest Player 1", "Z - Guest Player 2", "Z - Guest Player 3", "Z - Guest Player 4"];
+        players = ["Rod Berwick", "Bill Wallace", "David Phillips", "Wayne Perry", "Anthony Mina", "Gary Hodgson", "Wal Merak", "Sue Withers", "Tom Sullivan", "Alton Bowen", "Greg Nordsvan", "Stewart Johnston", "Andrus Tonismae", "Dave Williams", "Ian Manning", "Peter Rufford", "Pat Dunkin", "Mark Bailey", "John Reeves", "Bob Bear", "Peter Beiers", "Lucas Walkow", "Allan Large", "Paul Warwick", "Peter Oliver", "Maurie Barry", "Brian Morgan", "Graham Harding", "Peter Amodio", "Ron Graham", "Andrew Kirkup", "John Dring", "Mark Porter", "Ross Leonard", "Fred Hodges", "Peter Hart", "Greg Mccabe", "Lloyd Newlands"];
         savePlayersInStorage(players);
     }
     players.sort((a, b) => a.localeCompare(b));
@@ -111,6 +123,8 @@ function displayPlayers(players) {
         // Append the player element to the predefined players list
         predefinedPlayersList.appendChild(playerElement);
     });
+
+    markSelectedPredefinedPlayers();
 }
 
 function setupEventListeners() {
@@ -215,6 +229,7 @@ document.getElementById('save-selected-players').addEventListener('click', () =>
     // Close modal after saving
     const addPlayerModal = bootstrap.Modal.getInstance(document.getElementById('addPlayerModal'));
     addPlayerModal.hide();
+    updatePlayerCount();
 });
 
 // Function to shuffle an array (Fisher-Yates Shuffle)

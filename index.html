@@ -25,7 +25,7 @@
         <button class="hookers-green btn" id="create-matches">Create matches</button>
     </div>
     <div class="player-list">
-        <div class="player-list-label label">Players</div>
+        <div class="player-list-label label">Players <span id="player-count">(0)</span></div>
         <div id="player-names"></div> <!-- Container for player names -->
     </div>
     <div class="matches">
@@ -52,9 +52,12 @@
                 <div id="predefined-players-list"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="add-new-player">Add New Player</button>
+                <div class="me-auto"> <!-- This div wraps the Add New Player button and pushes it to the left -->
+                    <button type="button" class="btn btn-secondary" id="add-new-player">Add New Player</button>
+                </div>
+                <!-- The rest of the buttons stay on the right -->
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="save-selected-players">Save Selection</button>
+                <button type="button" class="btn btn-primary hookers-green" id="save-selected-players">Save Selection</button>
             </div>
         </div>
     </div>
