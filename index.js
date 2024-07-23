@@ -137,6 +137,8 @@ function setupEventListeners() {
     document.getElementById('save-player').addEventListener('click', savePlayer);
     // Add event listener for the toggle edit mode button
     document.getElementById('toggle-edit-mode').addEventListener('click', toggleEditMode);
+    document.getElementById('player-list-label').addEventListener('click', createBouncingBalls);
+
 }
 
 let isEditMode = false; // Track the state of edit mode
