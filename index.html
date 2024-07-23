@@ -40,21 +40,41 @@
     </div>
 </div>
 
-<!-- Add Player Modal -->
+<!-- Existing Select Players Modal -->
 <div class="modal fade" id="addPlayerModal" tabindex="-1" aria-labelledby="addPlayerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addPlayerModalLabel">Select Players</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Player selection list will be populated here -->
                 <div id="predefined-players-list"></div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-new-player">Add New Player</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="save-selected-players">Save Selection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Player Modal -->
+<div class="modal fade" id="playerModal" tabindex="-1" aria-labelledby="playerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="playerModalLabel">Add/Edit Player</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="player-name-input" placeholder="Player Name">
+                <input type="hidden" id="editing-player-index">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="save-player">Save Player</button>
             </div>
         </div>
     </div>

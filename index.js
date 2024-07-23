@@ -1,57 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const predefinedPlayers = [
-        "Rod Berwick",
-        "Bill Wallace",
-        "David Phillips",
-        "Wayne Perry",
-        "Anthony Mina",
-        "Gary Hodgson",
-        "Wal Merak",
-        "Sue Withers",
-        "Tom Sullivan",
-        "Alton Bowen",
-        "Greg Nordsvan",
-        "Stewart Johnston",
-        "Andrus Tonismae",
-        "Dave Williams",
-        "Ian Manning",
-        "Peter Rufford",
-        "Pat Dunkin",
-        "Mark Bailey",
-        "John Reeves",
-        "Bob Bear",
-        "Peter Beiers",
-        "Lucas Walkow",
-        "Allan Large",
-        "Paul Warwick",
-        "Peter Oliver",
-        "Maurie Barry",
-        "Brian Morgan",
-        "Graham Harding",
-        "Peter Amodio",
-        "Ron Graham",
-        "Andrew Kirkup",
-        "John Dring",
-        "Mark Porter",
-        "Ross Leonard",
-        "Fred Hodges",
-        "Peter Hart",
-        "Greg Mccabe",
-        "Lloyd Newlands",
-        "Z - Guest Player 1",
-        "Z - Guest Player 2",
-        "Z - Guest Player 3",
-        "Z - Guest Player 4"
-    ];
-    predefinedPlayers.sort((a, b) => a.localeCompare(b));
+    const players = getPlayerList();
+
+    displayPlayers(players);
+    setupEventListeners();
+
     const predefinedPlayersList = document.getElementById('predefined-players-list');
-    predefinedPlayers.forEach(player => {
+
+    players.forEach(player => {
         const playerElement = document.createElement('div');
         playerElement.textContent = player;
         playerElement.classList.add('predefined-player');
-        playerElement.addEventListener('click', function () {
-            this.classList.toggle('selected');
-        });
         predefinedPlayersList.appendChild(playerElement);
     });
 
@@ -95,6 +53,111 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNoMatchesMessage();
 });
 
+function getPlayerFromStorage() {
+    let players = JSON.parse(localStorage.getItem('players'));
+    if (players) {
+        players.sort((a, b) => a.localeCompare(b));
+    }
+    return players;
+}
+
+function savePlayersInStorage(players) {
+    players.sort((a, b) => a.localeCompare(b));
+    localStorage.setItem('players', JSON.stringify(players));
+}
+
+function getPlayerList() {
+    let players = getPlayerFromStorage();
+    if (!players) {
+        players = ["Rod Berwick", "Bill Wallace", "David Phillips", "Wayne Perry", "Anthony Mina", "Gary Hodgson", "Wal Merak", "Sue Withers", "Tom Sullivan", "Alton Bowen", "Greg Nordsvan", "Stewart Johnston", "Andrus Tonismae", "Dave Williams", "Ian Manning", "Peter Rufford", "Pat Dunkin", "Mark Bailey", "John Reeves", "Bob Bear", "Peter Beiers", "Lucas Walkow", "Allan Large", "Paul Warwick", "Peter Oliver", "Maurie Barry", "Brian Morgan", "Graham Harding", "Peter Amodio", "Ron Graham", "Andrew Kirkup", "John Dring", "Mark Porter", "Ross Leonard", "Fred Hodges", "Peter Hart", "Greg Mccabe", "Lloyd Newlands", "Z - Guest Player 1", "Z - Guest Player 2", "Z - Guest Player 3", "Z - Guest Player 4"];
+        savePlayersInStorage(players);
+    }
+    players.sort((a, b) => a.localeCompare(b));
+    return players;
+}
+
+function displayPlayers(players) {
+    const predefinedPlayersList = document.getElementById('predefined-players-list');
+    predefinedPlayersList.innerHTML = ''; // Clear the list before adding updated items
+    players.forEach((player, index) => {
+        const playerElement = document.createElement('div');
+        playerElement.classList.add('predefined-player');
+        playerElement.addEventListener('click', function () {
+            this.classList.toggle('selected');
+        });
+
+        // Container for the player's name
+        const playerName = document.createElement('span');
+        playerName.textContent = player;
+        playerName.classList.add('player-name');
+        // Container for the icons
+        const iconsContainer = document.createElement('div');
+        // Add edit icon
+        const editIcon = document.createElement('span');
+        editIcon.innerHTML = '✏️'; // Example edit icon, replace with your preferred icon
+        editIcon.classList.add('edit-icon');
+        editIcon.onclick = () => openEditPlayerModal(player, index);
+        // Add delete icon
+        const deleteIcon = document.createElement('span');
+        deleteIcon.innerHTML = '&#10060;'; // Example delete icon, replace with your preferred icon
+        deleteIcon.classList.add('delete-icon');
+        deleteIcon.onclick = () => deletePlayer(index);
+        // Append icons to the icons container
+        iconsContainer.appendChild(editIcon);
+        iconsContainer.appendChild(deleteIcon);
+        // Append the player name and icons container to the player element
+        playerElement.appendChild(playerName);
+        playerElement.appendChild(iconsContainer);
+        // Append the player element to the predefined players list
+        predefinedPlayersList.appendChild(playerElement);
+    });
+}
+
+function setupEventListeners() {
+    document.getElementById('add-new-player').addEventListener('click', openAddPlayerModal);
+    document.getElementById('save-player').addEventListener('click', savePlayer);
+}
+
+function openAddPlayerModal() {
+    document.getElementById('playerModalLabel').textContent = 'Add New Player';
+    document.getElementById('player-name-input').value = '';
+    document.getElementById('editing-player-index').value = '';
+    const playerModal = new bootstrap.Modal(document.getElementById('playerModal'));
+    playerModal.show();
+}
+
+function openEditPlayerModal(playerName, index) {
+    document.getElementById('playerModalLabel').textContent = 'Edit Player';
+    document.getElementById('player-name-input').value = playerName;
+    document.getElementById('editing-player-index').value = index;
+    const playerModal = new bootstrap.Modal(document.getElementById('playerModal'));
+    playerModal.show();
+}
+
+function savePlayer() {
+    const playerName = document.getElementById('player-name-input').value.trim();
+    const editingIndex = document.getElementById('editing-player-index').value;
+    let players = getPlayerFromStorage();
+    if (editingIndex) {
+        players[editingIndex] = playerName; // Edit existing player
+    } else if (playerName) {
+        players.push(playerName); // Add new player
+    }
+    savePlayersInStorage(players);
+    displayPlayers(players);
+    const playerModal = bootstrap.Modal.getInstance(document.getElementById('playerModal'));
+    playerModal.hide();
+}
+
+function deletePlayer(index) {
+    if (confirm('Are you sure you want to delete this player?')) {
+        let players = getPlayerFromStorage();
+        players.splice(index, 1);
+        savePlayersInStorage(players);
+        displayPlayers(players);
+    }
+}
+
 function updateNoMatchesMessage() {
     const matchesList = document.getElementById('matches-list');
     const noMatchesMessage = document.getElementById('no-matches-message');
@@ -136,7 +199,7 @@ function displayPlayerName(name, container) {
 }
 
 document.getElementById('save-selected-players').addEventListener('click', () => {
-    const selectedPlayers = document.querySelectorAll('.predefined-player.selected');
+    const selectedPlayers = document.querySelectorAll('.predefined-player.selected .player-name');
     const playerNamesContainer = document.getElementById('player-names');
     playerNamesContainer.innerHTML = ''; // Clear current list
 
@@ -163,7 +226,7 @@ function shuffleArray(array) {
 }
 
 document.getElementById('create-matches').addEventListener('click', () => {
-    const selectedPlayers = Array.from(document.querySelectorAll('.predefined-player.selected')).map(player => player.textContent);
+    const selectedPlayers = Array.from(document.querySelectorAll('.predefined-player.selected .player-name')).map(player => player.textContent);
     shuffleArray(selectedPlayers);
     // Target the #matches-list for clearing and adding matches
     const matchesList = document.getElementById('matches-list');
@@ -190,8 +253,7 @@ document.getElementById('create-matches').addEventListener('click', () => {
         }
     }
     const dataToSave = {
-        matches: matches,
-        resting: restingPlayers
+        matches: matches, resting: restingPlayers
     };
     localStorage.setItem('matchesData', JSON.stringify(dataToSave));
     updateNoMatchesMessage();
@@ -203,12 +265,8 @@ function createBouncingBalls() {
     let engine = Matter.Engine.create();
     let world = engine.world;
     let render = Matter.Render.create({
-        element: document.body,
-        engine: engine,
-        options: {
-            width: window.innerWidth,
-            height: window.innerHeight,
-            wireframes: false, // Set to false to see the tennis balls with colors
+        element: document.body, engine: engine, options: {
+            width: window.innerWidth, height: window.innerHeight, wireframes: false, // Set to false to see the tennis balls with colors
             background: 'transparent'
         }
     });
@@ -225,9 +283,7 @@ function createBouncingBalls() {
             restitution: 1.1, // Bounciness
             render: {
                 sprite: {
-                    texture: './assets/tennis-ball.png',
-                    xScale: ballScale,
-                    yScale: ballScale
+                    texture: './assets/tennis-ball.png', xScale: ballScale, yScale: ballScale
                 }
             }
         });

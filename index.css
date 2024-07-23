@@ -198,9 +198,21 @@ html, body {
 }
 
 .predefined-player {
-  cursor: pointer;
-  padding: 3px 10px;
-  border-radius: 10px;
+  display: flex;
+  justify-content: space-between; /* Aligns the player's name to the left and icons to the right */
+  align-items: center; /* Centers items vertically */
+  padding: 3px 10px; /* Adds some padding for better spacing */
+  cursor: pointer; /* Indicates clickable items */
+  margin: 5px;
+  border-radius: 12px; /* Optional: adds rounded corners */
+}
+
+.player-name {
+  /* Style for the player's name if needed */
+}
+.edit-icon, .delete-icon {
+  cursor: pointer; /* Indicates clickable items */
+  margin-left: 10px; /* Adds some space between the icons */
 }
 
 .match {
