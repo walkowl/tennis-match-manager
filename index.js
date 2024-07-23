@@ -70,7 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const savedData = JSON.parse(localStorage.getItem('matchesData'));
     if (savedData) {
-        const matchesContainer = document.getElementById('matches-list');        if (savedData.matches && savedData.matches.length > 0) {
+        const matchesContainer = document.getElementById('matches-list');
+        if (savedData.matches && savedData.matches.length > 0) {
             savedData.matches.forEach(matchData => {
                 const matchElement = createMatchElement(matchData); // Use your existing function
                 matchesContainer.appendChild(matchElement);
@@ -110,7 +111,8 @@ function createMatchElement(matchData) {
     match.classList.add('match');
     // Include court number in the match display
     const courtNumber = document.createElement('div');
-    courtNumber.innerHTML = `<img src="assets/tennis-ball.png" alt="Court" width="24" height="24"> Court ${matchData.court}`;    courtNumber.classList.add('court-number');
+    courtNumber.innerHTML = `<img src="assets/tennis-ball.png" alt="Court" width="24" height="24"> Court ${matchData.court}`;
+    courtNumber.classList.add('court-number');
     const teamOne = document.createElement('div');
     teamOne.classList.add('team');
     teamOne.innerHTML = `<div>${matchData.teamOne[0]}</div><div>${matchData.teamOne[1]}</div>`;
@@ -211,19 +213,21 @@ function createBouncingBalls() {
         }
     });
     // Add walls to the world so balls will bounce off the sides and bottom
-    let ground = Matter.Bodies.rectangle(window.innerWidth / 2, window.innerHeight, window.innerWidth, 10, { isStatic: true });
-    let leftWall = Matter.Bodies.rectangle(0, window.innerHeight / 2, 10, window.innerHeight, { isStatic: true });
-    let rightWall = Matter.Bodies.rectangle(window.innerWidth, window.innerHeight / 2, 10, window.innerHeight, { isStatic: true });
+    let ground = Matter.Bodies.rectangle(window.innerWidth / 2, window.innerHeight, window.innerWidth, 10, {isStatic: true});
+    let leftWall = Matter.Bodies.rectangle(0, window.innerHeight / 2, 10, window.innerHeight, {isStatic: true});
+    let rightWall = Matter.Bodies.rectangle(window.innerWidth, window.innerHeight / 2, 10, window.innerHeight, {isStatic: true});
     Matter.World.add(world, [ground, leftWall, rightWall]);
+
     // Function to add a ball
     function addBall() {
-        let ball = Matter.Bodies.circle(Math.random() * window.innerWidth, -30, 25, {
+        let ballScale = 0.3;
+        let ball = Matter.Bodies.circle(Math.random() * window.innerWidth, -30, 125 * ballScale, {
             restitution: 1.1, // Bounciness
             render: {
                 sprite: {
                     texture: './assets/tennis-ball.png',
-                    xScale: 0.3,
-                    yScale: 0.3
+                    xScale: ballScale,
+                    yScale: ballScale
                 }
             }
         });
@@ -234,12 +238,13 @@ function createBouncingBalls() {
         // Random Y velocity to simulate dropping, you can adjust the range for different effects
         let velocityY = Math.random() * -5; // Negative for upward movement, adjust range as needed
         // Set the initial velocity of the ball
-        Matter.Body.setVelocity(ball, { x: velocityX, y: velocityY });
+        Matter.Body.setVelocity(ball, {x: velocityX, y: velocityY});
         // Make the ball disappear after 5-6 seconds
         setTimeout(() => {
             Matter.World.remove(world, ball);
         }, 5000 + Math.random() * 1000);
     }
+
     // Add several balls for effect
     for (let i = 0; i < 10; i++) {
         setTimeout(addBall, i * 50);

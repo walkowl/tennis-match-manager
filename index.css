@@ -243,7 +243,9 @@ html, body {
 
 canvas {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: -10px;
+  left: -10px;
+  width: calc(100% + 20px);
+  height: calc(100% + 20px);
   z-index: 1; /* Adjust this value as needed to bring the canvas to the front */
 }
