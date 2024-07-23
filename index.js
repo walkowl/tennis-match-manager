@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     displayPlayers(players);
     setupEventListeners();
-    addSelectedPlayers();
     markSelectedPredefinedPlayers();
+    addSelectedPlayers();
 
     const savedData = JSON.parse(localStorage.getItem('matchesData'));
     if (savedData) {
@@ -35,31 +35,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function updatePlayerCount() {
-    const playerDivs = document.querySelectorAll('#player-names div');
+    const playerDivs = document.querySelectorAll('#selected-players div');
     const count = playerDivs.length;
     const playerCountSpan = document.getElementById("player-count");
     playerCountSpan.textContent = `(${count})`;
 }
 
-function markSelectedPredefinedPlayers() {
-    const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers'));
-    if (savedSelectedPlayers && savedSelectedPlayers.length > 0) {
-        savedSelectedPlayers.forEach(playerName => {
-            const playerElement = Array.from(document.querySelectorAll('.predefined-player .player-name')).find(element => element.textContent === playerName);
-            console.log(playerElement);
-            if (playerElement) {
-                playerElement.parentElement.classList.add('selected');
-            }
-        });
-    }
-}
-
 function addSelectedPlayers() {
     const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers'));
     if (savedSelectedPlayers && savedSelectedPlayers.length > 0) {
-        const playerNamesContainer = document.getElementById('player-names');
-        savedSelectedPlayers.forEach(playerName => {
-            displayPlayerName(playerName, playerNamesContainer);
+        const playerNamesContainer = document.getElementById('selected-players');
+        playerNamesContainer.innerHTML = ''; // Clear the container before adding updated items
+        savedSelectedPlayers.forEach(player => {
+            displayPlayerName(player, playerNamesContainer);
         });
     }
 }
@@ -128,8 +116,7 @@ function displayPlayers(players) {
         // Append the player element to the predefined players list
         predefinedPlayersList.appendChild(playerElement);
     });
-
-    markSelectedPredefinedPlayers();
+    addSelectedPlayers();
 }
 
 function setupEventListeners() {
@@ -138,7 +125,35 @@ function setupEventListeners() {
     // Add event listener for the toggle edit mode button
     document.getElementById('toggle-edit-mode').addEventListener('click', toggleEditMode);
     document.getElementById('player-list-label').addEventListener('click', createBouncingBalls);
+    clickSelectedPlayersListener();
+}
 
+function clickSelectedPlayersListener() {
+    const container = document.getElementById('selected-players');
+    container.addEventListener('click', function (event) {
+        // Check if the clicked element has the class 'selected-player'
+        if (event.target.classList.contains('selected-player')) {
+            const playerElement = event.target;
+            const playerName = playerElement.textContent; // Assuming the player's name is the text content of the clicked element
+            const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers')) || [];
+            // Find the player in the savedSelectedPlayers array
+            const playerIndex = savedSelectedPlayers.findIndex(player => player.playerName === playerName);
+            if (playerIndex !== -1) {
+                // Toggle the 'inactive' class on the player element
+                if (playerElement.classList.contains('inactive')) {
+                    playerElement.classList.remove('inactive');
+                    // Remove the 'inactive' property from the player object
+                    delete savedSelectedPlayers[playerIndex].inactive;
+                } else {
+                    playerElement.classList.add('inactive');
+                    // Add the 'inactive' property to the player object
+                    savedSelectedPlayers[playerIndex].inactive = true;
+                }
+                // Update localStorage with the modified savedSelectedPlayers array
+                localStorage.setItem('selectedPlayers', JSON.stringify(savedSelectedPlayers));
+            }
+        }
+    });
 }
 
 let isEditMode = false; // Track the state of edit mode
@@ -232,29 +247,51 @@ function createMatchElement(matchData) {
     return match;
 }
 
-function displayPlayerName(name, container) {
+function displayPlayerName(player, container) {
     const playerElement = document.createElement('div'); // Or 'li' if you're using a list
-    playerElement.textContent = name;
+    playerElement.textContent = player.playerName;
+    playerElement.classList.add('selected-player');
+    if (player.inactive) {
+        playerElement.classList.add('inactive');
+    }
     container.appendChild(playerElement);
 }
 
-document.getElementById('save-selected-players').addEventListener('click', () => {
-    const selectedPlayers = document.querySelectorAll('.predefined-player.selected .player-name');
-    const playerNamesContainer = document.getElementById('player-names');
-    playerNamesContainer.innerHTML = ''; // Clear current list
+function markSelectedPredefinedPlayers() {
+    const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers'));
+    if (savedSelectedPlayers && savedSelectedPlayers.length > 0) {
+        savedSelectedPlayers.forEach(player => {
+            const playerElement = Array.from(document.querySelectorAll('.predefined-player .player-name')).find(element => element.textContent === player.playerName);
+            if (playerElement) {
+                playerElement.parentElement.classList.add('selected');
+            }
+        });
+    }
+}
 
-    const selectedPlayerNames = [];
-    selectedPlayers.forEach(player => {
-        displayPlayerName(player.textContent, playerNamesContainer);
-        selectedPlayerNames.push(player.textContent);
+document.getElementById('save-selected-players').addEventListener('click', () => {
+    // Get all selected player elements
+    const selectedPlayersElements = document.querySelectorAll('.predefined-player.selected .player-name');
+    // Convert NodeList to an array of player names
+    const selectedPlayersNamesFromUI = Array.from(selectedPlayersElements).map(element => element.textContent);
+    // Retrieve the currently stored players from localStorage, or initialize an empty array if none
+    let storedPlayers = JSON.parse(localStorage.getItem('selectedPlayers')) || [];
+    // Filter out players that are no longer selected
+    storedPlayers = storedPlayers.filter(player => selectedPlayersNamesFromUI.includes(player.playerName));
+    // Find and add new players that are selected but not in localStorage
+    selectedPlayersNamesFromUI.forEach(playerNameFromUI => {
+        if (!storedPlayers.find(player => player.playerName === playerNameFromUI)) {
+            storedPlayers.push({playerName: playerNameFromUI});
+        }
     });
 
-    // Save the selected players to localStorage
-    localStorage.setItem('selectedPlayers', JSON.stringify(selectedPlayerNames));
+    // Save the updated list of selected players to localStorage
+    localStorage.setItem('selectedPlayers', JSON.stringify(storedPlayers));
 
     // Close modal after saving
     const addPlayerModal = bootstrap.Modal.getInstance(document.getElementById('addPlayerModal'));
     addPlayerModal.hide();
+    addSelectedPlayers();
     updatePlayerCount();
 });
 
@@ -267,7 +304,9 @@ function shuffleArray(array) {
 }
 
 document.getElementById('create-matches').addEventListener('click', () => {
-    const selectedPlayers = Array.from(document.querySelectorAll('.predefined-player.selected .player-name')).map(player => player.textContent);
+    const selectedPlayers = Array.from(document.querySelectorAll('#selected-players div'))
+        .filter(player => !player.classList.contains('inactive'))
+        .map(player => player.textContent);
     shuffleArray(selectedPlayers);
     // Target the #matches-list for clearing and adding matches
     const matchesList = document.getElementById('matches-list');
@@ -381,7 +420,7 @@ document.getElementById('confirmNewSession').addEventListener('click', () => {
     // Clear selected players from localStorage
     localStorage.removeItem('selectedPlayers');
     // Optionally, clear the player names display if you have a separate list for that
-    document.getElementById('player-names').innerHTML = '';
+    document.getElementById('selected-players').innerHTML = '';
 
     // Close the modal after performing the actions
     const newSessionModal = bootstrap.Modal.getInstance(document.getElementById('newSessionModal'));

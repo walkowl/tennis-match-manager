@@ -1,82 +1,83 @@
 :root {
-  /* CSS HEX */
-  --oxford-blue: #001427ff;
-  --hookers-green: #1dbd78;
-  --jasmine: #f4d58dff;
-  --jasmine-light: #e6dbc0;
-  --engineering-orange: #bf0603ff;
-  --dark-red: #8d0801ff;
-  --dark-grey: #2d3142;
+    /* CSS HEX */
+    --oxford-blue: #001427ff;
+    --hookers-green: #1dbd78;
+    --jasmine: #f4d58dff;
+    --jasmine-light: #e6dbc0;
+    --engineering-orange: #bf0603ff;
+    --dark-red: #8d0801ff;
+    --dark-grey: #2d3142;
 }
 
 html, body {
-  height: 100%; /* Ensure the html and body elements take up the full height */
-  margin: 0;
-  padding: 0;
-  position: relative; /* Needed to position the pseudo-element */
-  overflow: hidden; /* Prevents scrollbars if the pseudo-element is larger than the body */
+    height: 100%; /* Ensure the html and body elements take up the full height */
+    margin: 0;
+    padding: 0;
+    position: relative; /* Needed to position the pseudo-element */
+    overflow: hidden; /* Prevents scrollbars if the pseudo-element is larger than the body */
 }
 
 body::before {
-  content: ''; /* Required for the pseudo-element to show */
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('./assets/tennis-background.jpg'); /* Add your background image */
-  background-size: cover; /* Cover the entire page, maintaining aspect ratio */
-  background-position: center; /* Center the background image */
-  background-repeat: no-repeat; /* Do not repeat the image */
-  opacity: 0.1; /* Adjust the opacity to make the image 50% transparent */
-  z-index: -1; /* Ensures the pseudo-element is behind the content */
+    content: ''; /* Required for the pseudo-element to show */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('./assets/tennis-background.jpg'); /* Add your background image */
+    background-size: cover; /* Cover the entire page, maintaining aspect ratio */
+    background-position: center; /* Center the background image */
+    background-repeat: no-repeat; /* Do not repeat the image */
+    opacity: 0.1; /* Adjust the opacity to make the image 50% transparent */
+    z-index: -1; /* Ensures the pseudo-element is behind the content */
 }
 
 .main, .buttons, .player-list, .matches, .modal-content {
-  position: relative;
-  z-index: 10;
+    position: relative;
+    z-index: 10;
 }
+
 /* If you have specific elements with a solid background that you want to keep, you can individually set their backgrounds. For example, if you want the modal-content background to remain solid: */
 .modal-content {
-  background: #FFF; /* Or any color you prefer */
+    background: #FFF; /* Or any color you prefer */
 }
 
 @font-face {
-  font-family: "Lato-Bold";
-  src: url("assets/Lato-Bold.ttf") format("truetype");
+    font-family: "Lato-Bold";
+    src: url("assets/Lato-Bold.ttf") format("truetype");
 }
 
 @font-face {
-  font-family: "Lato-Regular";
-  src: url("assets/Lato-Regular.ttf") format("truetype");
+    font-family: "Lato-Regular";
+    src: url("assets/Lato-Regular.ttf") format("truetype");
 }
 
 * {
-  margin: 0;
-  padding: 0;
-  font-family: "Lato-Bold", sans-serif;
-  font-weight: 700;
-  font-style: normal;
-  font-size: 1.09em;
+    margin: 0;
+    padding: 0;
+    font-family: "Lato-Bold", sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 1.09em;
 }
 
 html, body {
-  height: 100%; /* Ensure the html and body elements take up the full height */
+    height: 100%; /* Ensure the html and body elements take up the full height */
 }
 
 .jasmine {
-  background-color: var(--jasmine);
-  color: var(--oxford-blue);
+    background-color: var(--jasmine);
+    color: var(--oxford-blue);
 }
 
 .oxford-blue {
-  background-color: var(--oxford-blue);
-  color: var(--jasmine);
+    background-color: var(--oxford-blue);
+    color: var(--jasmine);
 }
 
 .hookers-green {
-  background-color: var(--hookers-green);
-  color: var(--oxford-blue);
+    background-color: var(--hookers-green);
+    color: var(--oxford-blue);
 }
 
 /*.button {*/
@@ -92,181 +93,194 @@ html, body {
 /*}*/
 
 .label {
-  text-align: center;
-  padding: 10px;
-  font-size: 1.7em;
+    text-align: center;
+    padding: 10px;
+    font-size: 1.7em;
 }
 
 .main {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr);
-  grid-column-gap: 0px;
-  grid-row-gap: 0px;
-  height: 100vh; /* Make the grid take up the full viewport height */
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+    height: 100vh; /* Make the grid take up the full viewport height */
 }
 
 .buttons {
-  grid-area: 5 / 2 / 6 / 6;
-  display: grid;
-  grid-template-rows: repeat(1, 1fr);
-  grid-template-columns: repeat(4, 1fr);
+    grid-area: 5 / 2 / 6 / 6;
+    display: grid;
+    grid-template-rows: repeat(1, 1fr);
+    grid-template-columns: repeat(4, 1fr);
 }
 
 .buttons button:first-child {
-  grid-column: 1 / 2; /* Place the first button (Add Player) in the second column */
+    grid-column: 1 / 2; /* Place the first button (Add Player) in the second column */
 }
+
 .buttons button:last-child {
-  grid-column: 4 / 5; /* Place the second button (Create matches) in the third column */
+    grid-column: 4 / 5; /* Place the second button (Create matches) in the third column */
 }
 
 .player-list {
-  grid-area: 1 / 1 / 6 / 2;
-  border-right: 1px solid #ddd;
+    grid-area: 1 / 1 / 6 / 2;
+    border-right: 1px solid #ddd;
 }
 
 .matches {
-  grid-area: 1 / 2 / 5 / 6;
-  border-bottom: 1px solid #ddd;
-  overflow-y: auto; /* Enables vertical scrolling if the content overflows */
-  max-height: calc(100vh - 20px); /* Adjust the max-height as needed */
-  padding: 10px; /* Adds some padding inside the matches container */
+    grid-area: 1 / 2 / 5 / 6;
+    border-bottom: 1px solid #ddd;
+    overflow-y: auto; /* Enables vertical scrolling if the content overflows */
+    max-height: calc(100vh - 20px); /* Adjust the max-height as needed */
+    padding: 10px; /* Adds some padding inside the matches container */
 }
 
 .matches-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
 }
 
 #no-matches-message {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  text-align: center;
-  font-size: 1.5em; /* Adjust font size as needed */
-  color: var(--oxford-blue); /* Adjust text color as needed */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    text-align: center;
+    font-size: 1.5em; /* Adjust font size as needed */
+    color: var(--oxford-blue); /* Adjust text color as needed */
 }
 
 .matches-list-label {
-  width: 80%;
+    width: 80%;
 }
 
-#player-names div {
-  padding: 5px;
-  margin: 5px 0;
-  color: var(--oxford-blue);
-  background-color: var(--jasmine-light);
-  /*background-color: var(--oxford-blue);*/
-  /*color: var(--jasmine);*/
-  text-align: center;
+#selected-players div {
+    padding: 5px;
+    margin: 5px 0;
+    color: var(--oxford-blue);
+    background-color: var(--jasmine-light);
+    /*background-color: var(--oxford-blue);*/
+    /*color: var(--jasmine);*/
+    text-align: center;
 }
 
-#player-names {
-  overflow-y: auto; /* Enables vertical scrolling if needed */
-  max-height: 90%; /* Adjust based on your layout, ensures there's a limit to growth */
+#selected-players {
+    overflow-y: auto; /* Enables vertical scrolling if needed */
+    max-height: 90%; /* Adjust based on your layout, ensures there's a limit to growth */
 }
 
 .btn-red {
-  background-color: var(--dark-red) !important;
-  color: white !important;
-  border-color: #4e1512 !important;;
+    background-color: var(--dark-red) !important;
+    color: white !important;
+    border-color: #4e1512 !important;;
 }
 
 .btn-big {
-  font-size: 1.5em !important;
+    font-size: 1.5em !important;
 }
 
 .btn-mid {
-  font-size: 1.15em !important;
+    font-size: 1.15em !important;
+}
+
+#selected-players .selected-player.inactive {
+    text-decoration: line-through;
+    filter: grayscale(100%);
+    color: #777;
+}
+
+#selected-players .selected-player {
+    cursor: pointer;
 }
 
 /* Custom button styles to override Bootstrap defaults */
 .btn.jasmine {
-  background-color: var(--dark-grey) !important; /* Use !important to ensure override */
-  color: var(--jasmine-light) !important;
+    background-color: var(--dark-grey) !important; /* Use !important to ensure override */
+    color: var(--jasmine-light) !important;
 }
 
 .btn.hookers-green {
-  background-color: var(--hookers-green) !important;
-  color: var(--oxford-blue) !important;
-  border-color: var(--hookers-green) !important;
+    background-color: var(--hookers-green) !important;
+    color: var(--oxford-blue) !important;
+    border-color: var(--hookers-green) !important;
 }
 
 .hidden {
-  display: none;
+    display: none;
 }
 
 /* If you have other buttons you want to customize, follow the same pattern */
 
 .predefined-player.selected {
-  background-color: var(--dark-grey); /* Bootstrap primary color */
-  color: white;
+    background-color: var(--dark-grey); /* Bootstrap primary color */
+    color: white;
 }
 
 .predefined-player {
-  display: flex;
-  justify-content: space-between; /* Aligns the player's name to the left and icons to the right */
-  align-items: center; /* Centers items vertically */
-  padding: 3px 10px; /* Adds some padding for better spacing */
-  cursor: pointer; /* Indicates clickable items */
-  margin: 5px;
-  border-radius: 12px; /* Optional: adds rounded corners */
+    display: flex;
+    justify-content: space-between; /* Aligns the player's name to the left and icons to the right */
+    align-items: center; /* Centers items vertically */
+    padding: 3px 10px; /* Adds some padding for better spacing */
+    cursor: pointer; /* Indicates clickable items */
+    margin: 5px;
+    border-radius: 12px; /* Optional: adds rounded corners */
 }
 
 .player-name {
-  /* Style for the player's name if needed */
+    /* Style for the player's name if needed */
 }
+
 .edit-icon, .delete-icon {
-  cursor: pointer; /* Indicates clickable items */
-  margin-left: 10px; /* Adds some space between the icons */
+    cursor: pointer; /* Indicates clickable items */
+    margin-left: 10px; /* Adds some space between the icons */
 }
 
 .match {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  margin: 10px 0;
-  padding: 10px;
-  background-color: #fff; /* Light grey background */
-  border-radius: 8px; /* Optional: adds rounded corners */
-  border: 1px dotted #777;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #fff; /* Light grey background */
+    border-radius: 8px; /* Optional: adds rounded corners */
+    border: 1px dotted #777;
 }
 
 .team {
-  display: flex;
-  flex-direction: column;
-  text-align: center;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
 }
+
 .versus {
-  font-weight: bold;
-  margin: 0 20px;
+    font-weight: bold;
+    margin: 0 20px;
 }
 
 .court-header {
-  font-size: 1.2em;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 10px; /* Adds some space between the header and the match details */
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px; /* Adds some space between the header and the match details */
 }
 
 .resting {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  margin: 10px 0;
-  padding: 10px;
-  font-size: 1.5em;
-  text-decoration: underline;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    font-size: 1.5em;
+    text-decoration: underline;
 }
 
 canvas {
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  width: calc(100% + 20px);
-  height: calc(100% + 20px);
-  z-index: 1; /* Adjust this value as needed to bring the canvas to the front */
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    width: calc(100% + 20px);
+    height: calc(100% + 20px);
+    z-index: 1; /* Adjust this value as needed to bring the canvas to the front */
 }
