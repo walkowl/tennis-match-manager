@@ -231,7 +231,7 @@ function createBouncingBalls() {
         // Make the ball disappear after 3-4 seconds
         setTimeout(() => {
             Matter.World.remove(world, ball);
-        }, 10000 + Math.random() * 1000);
+        }, 5000 + Math.random() * 1000);
     }
     // Add several balls for effect
     for (let i = 0; i < 20; i++) {
@@ -247,7 +247,7 @@ function createBouncingBalls() {
         Matter.Engine.clear(engine);
         render.canvas.remove();
         render.textures = {};
-    }, 15000); // Stop everything after 5 seconds
+    }, 10000); // Stop everything after 5 seconds
 }
 
 document.getElementById('new-matches').addEventListener('click', () => {
