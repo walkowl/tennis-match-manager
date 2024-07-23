@@ -228,7 +228,14 @@ function createBouncingBalls() {
             }
         });
         Matter.World.add(world, ball);
-        // Make the ball disappear after 3-4 seconds
+        // Randomize initial velocity
+        // Random X velocity between -5 and 5
+        let velocityX = Math.random() * 10 - 5;
+        // Random Y velocity to simulate dropping, you can adjust the range for different effects
+        let velocityY = Math.random() * -5; // Negative for upward movement, adjust range as needed
+        // Set the initial velocity of the ball
+        Matter.Body.setVelocity(ball, { x: velocityX, y: velocityY });
+        // Make the ball disappear after 5-6 seconds
         setTimeout(() => {
             Matter.World.remove(world, ball);
         }, 5000 + Math.random() * 1000);
