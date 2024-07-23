@@ -57,7 +57,7 @@ body::before {
   font-family: "Lato-Bold", sans-serif;
   font-weight: 700;
   font-style: normal;
-  font-size: 1.07em;
+  font-size: 1.09em;
 }
 
 html, body {
@@ -149,6 +149,7 @@ html, body {
   margin: 5px 0;
   color: var(--oxford-blue);
   background-color: var(--jasmine-light);
+  font-size: 1.5em;
   /*background-color: var(--oxford-blue);*/
   /*color: var(--jasmine);*/
   text-align: center;
@@ -166,7 +167,7 @@ html, body {
 }
 
 .btn {
-  font-size: 1.2em !important;
+  font-size: 1.5em !important;
 }
 /* Custom button styles to override Bootstrap defaults */
 .btn.jasmine {
