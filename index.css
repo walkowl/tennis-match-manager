@@ -9,6 +9,38 @@
   --dark-grey: #2d3142;
 }
 
+html, body {
+  height: 100%; /* Ensure the html and body elements take up the full height */
+  margin: 0;
+  padding: 0;
+  position: relative; /* Needed to position the pseudo-element */
+  overflow: hidden; /* Prevents scrollbars if the pseudo-element is larger than the body */
+}
+
+body::before {
+  content: ''; /* Required for the pseudo-element to show */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('./assets/tennis-background.jpg'); /* Add your background image */
+  background-size: cover; /* Cover the entire page, maintaining aspect ratio */
+  background-position: center; /* Center the background image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+  opacity: 0.1; /* Adjust the opacity to make the image 50% transparent */
+  z-index: -1; /* Ensures the pseudo-element is behind the content */
+}
+
+.main, .buttons, .player-list, .matches, .modal-content {
+  position: relative;
+  z-index: 1;
+}
+/* If you have specific elements with a solid background that you want to keep, you can individually set their backgrounds. For example, if you want the modal-content background to remain solid: */
+.modal-content {
+  background: #FFF; /* Or any color you prefer */
+}
+
 @font-face {
   font-family: "Lato-Bold";
   src: url("assets/Lato-Bold.ttf") format("truetype");
@@ -75,7 +107,6 @@ html, body {
 }
 
 .buttons {
-  background: #EEE;
   grid-area: 5 / 2 / 6 / 6;
   display: grid;
   grid-template-rows: repeat(1, 1fr);
@@ -90,13 +121,11 @@ html, body {
 }
 
 .player-list {
-  background: #EEE;
   grid-area: 1 / 1 / 6 / 2;
   border-right: 1px solid #ddd;
 }
 
 .matches {
-  background: #EEE;
   grid-area: 1 / 2 / 5 / 6;
   border-bottom: 1px solid #ddd;
   overflow-y: auto; /* Enables vertical scrolling if the content overflows */

@@ -98,8 +98,7 @@ function createMatchElement(matchData) {
     match.classList.add('match');
     // Include court number in the match display
     const courtNumber = document.createElement('div');
-    courtNumber.textContent = `Court ${matchData.court}`;
-    courtNumber.classList.add('court-number');
+    courtNumber.innerHTML = `<img src="assets/tennis-ball.png" alt="Court" width="24" height="24"> Court ${matchData.court}`;    courtNumber.classList.add('court-number');
     const teamOne = document.createElement('div');
     teamOne.classList.add('team');
     teamOne.innerHTML = `<div>${matchData.teamOne[0]}</div><div>${matchData.teamOne[1]}</div>`;
