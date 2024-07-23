@@ -175,9 +175,14 @@ html, body {
   border-color: #4e1512 !important;;
 }
 
-.btn {
+.btn-big {
   font-size: 1.5em !important;
 }
+
+.btn-mid {
+  font-size: 1.15em !important;
+}
+
 /* Custom button styles to override Bootstrap defaults */
 .btn.jasmine {
   background-color: var(--dark-grey) !important; /* Use !important to ensure override */
@@ -188,6 +193,10 @@ html, body {
   background-color: var(--hookers-green) !important;
   color: var(--oxford-blue) !important;
   border-color: var(--hookers-green) !important;
+}
+
+.hidden {
+  display: none;
 }
 
 /* If you have other buttons you want to customize, follow the same pattern */
