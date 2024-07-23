@@ -419,6 +419,8 @@ document.getElementById('confirmNewSession').addEventListener('click', () => {
     document.getElementById('matches-list').innerHTML = ''; // Clear matches
     // Clear selected players from localStorage
     localStorage.removeItem('selectedPlayers');
+    localStorage.removeItem('matchesData');
+
     // Optionally, clear the player names display if you have a separate list for that
     document.getElementById('selected-players').innerHTML = '';
 
