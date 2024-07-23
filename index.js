@@ -81,7 +81,7 @@ function savePlayersInStorage(players) {
 function getPlayerList() {
     let players = getPlayerFromStorage();
     if (!players) {
-        players = ["Rod Berwick", "Bill Wallace", "David Phillips", "Wayne Perry", "Anthony Mina", "Gary Hodgson", "Wal Merak", "Sue Withers", "Tom Sullivan", "Alton Bowen", "Greg Nordsvan", "Stewart Johnston", "Andrus Tonismae", "Dave Williams", "Ian Manning", "Peter Rufford", "Pat Dunkin", "Mark Bailey", "John Reeves", "Bob Bear", "Peter Beiers", "Lucas Walkow", "Allan Large", "Paul Warwick", "Peter Oliver", "Maurie Barry", "Brian Morgan", "Graham Harding", "Peter Amodio", "Ron Graham", "Andrew Kirkup", "John Dring", "Mark Porter", "Ross Leonard", "Fred Hodges", "Peter Hart", "Greg Mccabe", "Lloyd Newlands"];
+        players = ["Rod Berwick", "Bill Wallace", "David Phillips", "Wayne Perry", "Anthony Mina", "Gary Hodgson", "Wal Merak", "Sue Withers", "Tom Sullivan", "Alton Bowen", "Greg Nordsvan", "Stewart Johnston", "Andrus Tonismae", "Dave Williams", "Ian Manning", "Peter Rufford", "Pat Dunkin", "Mark Bailey", "John Reeves", "Bob Bear", "Peter Beiers", "Lukasz Walkow", "Allan Large", "Paul Warwick", "Peter Oliver", "Maurie Barry", "Brian Morgan", "Graham Harding", "Peter Amodio", "Ron Graham", "Andrew Kirkup", "John Dring", "Mark Porter", "Ross Leonard", "Fred Hodges", "Peter Hart", "Greg Mccabe", "Lloyd Newlands"];
         savePlayersInStorage(players);
     }
     players.sort((a, b) => a.localeCompare(b));
