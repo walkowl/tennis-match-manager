@@ -1,12 +1,8 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const players = getPlayerList();
-
-    displayPlayers(players);
-    setupEventListeners();
-
+function displaySavedMatches() {
     const savedData = JSON.parse(localStorage.getItem('matchesData'));
     if (savedData) {
         const matchesContainer = document.getElementById('matches-list');
+
         if (savedData.matches && savedData.matches.length > 0) {
             savedData.matches.forEach(matchData => {
                 const matchElement = createMatchElement(matchData); // Use your existing function
@@ -20,6 +16,15 @@ document.addEventListener('DOMContentLoaded', () => {
             matchesContainer.appendChild(resting);
         }
     }
+    updateNoMatchesMessage();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const players = getPlayerList();
+
+    displayPlayers(players);
+    setupEventListeners();
+    displaySavedMatches();
 
     // Add event listener to the "Add Player" button to open the modal
     const addPlayerButton = document.getElementById('add-player');
@@ -27,8 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const addPlayerModal = new bootstrap.Modal(document.getElementById('addPlayerModal'));
         addPlayerModal.show();
     });
-
-    updateNoMatchesMessage();
     updatePlayerCount();
 });
 
@@ -82,6 +85,7 @@ function displayPlayers(players) {
         playerElement.classList.add('predefined-player');
         playerElement.addEventListener('click', function () {
             this.classList.toggle('selected');
+            saveSelectedPredefinedPlayers();
         });
 
         // Container for the player's name
@@ -280,7 +284,7 @@ function markSelectedPredefinedPlayers() {
     }
 }
 
-document.getElementById('save-selected-players').addEventListener('click', () => {
+function saveSelectedPredefinedPlayers() {
     // Get all selected player elements
     const selectedPlayersElements = document.querySelectorAll('.predefined-player.selected .player-name');
     // Convert NodeList to an array of player names
@@ -299,11 +303,15 @@ document.getElementById('save-selected-players').addEventListener('click', () =>
     // Save the updated list of selected players to localStorage
     localStorage.setItem('selectedPlayers', JSON.stringify(storedPlayers));
 
+    addSelectedPlayers();
+    updatePlayerCount();
+}
+
+document.getElementById('save-selected-players').addEventListener('click', () => {
+    saveSelectedPredefinedPlayers();
     // Close modal after saving
     const addPlayerModal = bootstrap.Modal.getInstance(document.getElementById('addPlayerModal'));
     addPlayerModal.hide();
-    addSelectedPlayers();
-    updatePlayerCount();
 });
 
 // Function to shuffle an array (Fisher-Yates Shuffle)
@@ -332,14 +340,8 @@ document.getElementById('create-matches').addEventListener('click', () => {
                 teamTwo: [selectedPlayers[i + 2], selectedPlayers[i + 3]]
             };
             matches.push(matchData);
-            const matchElement = createMatchElement(matchData);
-            matchesList.appendChild(matchElement); // Append to matches list
         } else {
             restingPlayers = selectedPlayers.slice(i);
-            const resting = document.createElement('div');
-            resting.classList.add('resting');
-            resting.textContent = `Resting: ${restingPlayers.map(it => formatPlayerName(it)).join(', ')}`;
-            matchesList.appendChild(resting); // Append to matches list
             break; // Exit the loop as we've handled all players
         }
     }
@@ -347,7 +349,7 @@ document.getElementById('create-matches').addEventListener('click', () => {
         matches: matches, resting: restingPlayers
     };
     localStorage.setItem('matchesData', JSON.stringify(dataToSave));
-    updateNoMatchesMessage();
+    displaySavedMatches();
     createBouncingBalls();
 });
 
