@@ -3,8 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     displayPlayers(players);
     setupEventListeners();
-    markSelectedPredefinedPlayers();
-    addSelectedPlayers();
 
     const savedData = JSON.parse(localStorage.getItem('matchesData'));
     if (savedData) {
@@ -69,7 +67,7 @@ function savePlayersInStorage(players) {
 function getPlayerList() {
     let players = getPlayerFromStorage();
     if (!players) {
-        players = ["Rod Berwick", "Bill Wallace", "David Phillips", "Wayne Perry", "Anthony Mina", "Gary Hodgson", "Wal Merak", "Sue Withers", "Tom Sullivan", "Alton Bowen", "Greg Nordsvan", "Stewart Johnston", "Andrus Tonismae", "Dave Williams", "Ian Manning", "Peter Rufford", "Pat Dunkin", "Mark Bailey", "John Reeves", "Bob Bear", "Peter Beiers", "Lukasz Walkow", "Allan Large", "Paul Warwick", "Peter Oliver", "Maurie Barry", "Brian Morgan", "Graham Harding", "Peter Amodio", "Ron Graham", "Andrew Kirkup", "John Dring", "Mark Porter", "Ross Leonard", "Fred Hodges", "Peter Hart", "Greg Mccabe", "Lloyd Newlands"];
+        players = ["Rod Berwick", "Bill Wallace", "David Phillips", "Wayne Perry", "Anthony Mina", "Gary Hodgson", "Wal Merak", "Sue Withers", "Tom Sullivan", "Alton Bowen", "Greg Nordsvan", "Stewart Johnston", "Andrus Tonismae", "Dave Williams", "Ian Manning", "Peter Rufford", "Pat Dunkin", "Mark Bailey", "John Reeves", "Bob Bear", "Peter Beiers", "Lukas Walkow", "Allan Large", "Paul Warwick", "Peter Oliver", "Maurie Barry", "Brian Morgan", "Graham Harding", "Peter Amodio", "Ron Graham", "Andrew Kirkup", "John Dring", "Mark Porter", "Ross Leonard", "Fred Hodges", "Peter Hart", "Greg Mccabe", "Lloyd Newlands"];
         savePlayersInStorage(players);
     }
     players.sort((a, b) => a.localeCompare(b));
@@ -116,6 +114,7 @@ function displayPlayers(players) {
         // Append the player element to the predefined players list
         predefinedPlayersList.appendChild(playerElement);
     });
+    markSelectedPredefinedPlayers();
     addSelectedPlayers();
 }
 
@@ -233,18 +232,30 @@ function createMatchElement(matchData) {
     courtNumber.classList.add('court-number');
     const teamOne = document.createElement('div');
     teamOne.classList.add('team');
-    teamOne.innerHTML = `<div>${matchData.teamOne[0]}</div><div>${matchData.teamOne[1]}</div>`;
+    teamOne.innerHTML = `<div>${formatPlayerName(matchData.teamOne[0])}</div><div>${formatPlayerName(matchData.teamOne[1])}</div>`;
     const versus = document.createElement('div');
     versus.classList.add('versus');
     versus.textContent = 'vs';
     const teamTwo = document.createElement('div');
     teamTwo.classList.add('team');
-    teamTwo.innerHTML = `<div>${matchData.teamTwo[0]}</div><div>${matchData.teamTwo[1]}</div>`;
+    teamTwo.innerHTML = `<div>${formatPlayerName(matchData.teamTwo[0])}</div><div>${formatPlayerName(matchData.teamTwo[1])}</div>`;
     match.appendChild(courtNumber);
     match.appendChild(teamOne);
     match.appendChild(versus);
     match.appendChild(teamTwo);
     return match;
+}
+
+function formatPlayerName(playerName) {
+    let names = playerName.split(' '); // Split the name into an array of [first_name, surname]
+    if (names.length > 1) {
+        let firstName = names[0].toUpperCase(); // Convert the first name to uppercase
+        let surname = names.slice(1).join(' '); // Handle cases where there might be a middle name or multiple surnames
+        return `${firstName} ${surname}`; // Combine and return the formatted name
+    } else {
+        // In case the playerName doesn't have a surname, just convert the entire name to uppercase
+        return playerName.toUpperCase();
+    }
 }
 
 function displayPlayerName(player, container) {
@@ -327,7 +338,7 @@ document.getElementById('create-matches').addEventListener('click', () => {
             restingPlayers = selectedPlayers.slice(i);
             const resting = document.createElement('div');
             resting.classList.add('resting');
-            resting.textContent = `Resting: ${restingPlayers.join(', ')}`;
+            resting.textContent = `Resting: ${restingPlayers.map(it => formatPlayerName(it)).join(', ')}`;
             matchesList.appendChild(resting); // Append to matches list
             break; // Exit the loop as we've handled all players
         }
