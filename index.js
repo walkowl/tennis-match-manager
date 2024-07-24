@@ -1,3 +1,84 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const players = getPlayerList();
+
+    displayPlayers(players);
+    setupEventListeners();
+    displaySavedMatches();
+
+    // Add event listener to the "Add Player" button to open the modal
+    const addPlayerButton = document.getElementById('add-player');
+    addPlayerButton.addEventListener('click', () => {
+        const addPlayerModal = new bootstrap.Modal(document.getElementById('addPlayerModal'));
+        addPlayerModal.show();
+    });
+    updatePlayerCount();
+});
+
+document.getElementById('create-matches').addEventListener('click', () => {
+    const selectedPlayers = Array.from(document.querySelectorAll('#selected-players div'))
+        .filter(player => !player.classList.contains('inactive'))
+        .map(player => player.textContent);
+    shuffleArray(selectedPlayers);
+    // Target the #matches-list for clearing and adding matches
+    const matchesList = document.getElementById('matches-list');
+    matchesList.innerHTML = ''; // Clear only the matches list
+    const matches = [];
+    let restingPlayers = [];
+    for (let i = 0; i < selectedPlayers.length; i += 4) {
+        if (i + 3 < selectedPlayers.length) {
+            const matchData = {
+                court: Math.floor(i / 4) + 1, // Calculate court number
+                teamOne: [selectedPlayers[i], selectedPlayers[i + 1]],
+                teamTwo: [selectedPlayers[i + 2], selectedPlayers[i + 3]]
+            };
+            matches.push(matchData);
+        } else {
+            restingPlayers = selectedPlayers.slice(i);
+            break; // Exit the loop as we've handled all players
+        }
+    }
+    const dataToSave = {
+        matches: matches, resting: restingPlayers
+    };
+    localStorage.setItem('matchesData', JSON.stringify(dataToSave));
+    displaySavedMatches();
+    createBouncingBalls();
+});
+
+document.getElementById('new-matches').addEventListener('click', () => {
+    // Show the Bootstrap modal
+    const newSessionModal = new bootstrap.Modal(document.getElementById('newSessionModal'));
+    newSessionModal.show();
+});
+
+document.getElementById('confirmNewSession').addEventListener('click', () => {
+    // This code runs when the "New Session" button in the modal is clicked
+    // Unselect all players
+    document.querySelectorAll('.predefined-player.selected').forEach(player => {
+        player.classList.remove('selected');
+    });
+    // Clear only the matches display, preserving the "New" button and header
+    document.getElementById('matches-list').innerHTML = ''; // Clear matches
+    // Clear selected players from localStorage
+    localStorage.removeItem('selectedPlayers');
+    localStorage.removeItem('matchesData');
+
+    // Optionally, clear the player names display if you have a separate list for that
+    document.getElementById('selected-players').innerHTML = '';
+
+    // Close the modal after performing the actions
+    const newSessionModal = bootstrap.Modal.getInstance(document.getElementById('newSessionModal'));
+    newSessionModal.hide();
+    updateNoMatchesMessage();
+});
+
+document.getElementById('save-selected-players').addEventListener('click', () => {
+    saveSelectedPredefinedPlayers();
+    // Close modal after saving
+    const addPlayerModal = bootstrap.Modal.getInstance(document.getElementById('addPlayerModal'));
+    addPlayerModal.hide();
+});
+
 function displaySavedMatches() {
     const savedData = JSON.parse(localStorage.getItem('matchesData'));
     if (savedData) {
@@ -18,22 +99,6 @@ function displaySavedMatches() {
     }
     updateNoMatchesMessage();
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    const players = getPlayerList();
-
-    displayPlayers(players);
-    setupEventListeners();
-    displaySavedMatches();
-
-    // Add event listener to the "Add Player" button to open the modal
-    const addPlayerButton = document.getElementById('add-player');
-    addPlayerButton.addEventListener('click', () => {
-        const addPlayerModal = new bootstrap.Modal(document.getElementById('addPlayerModal'));
-        addPlayerModal.show();
-    });
-    updatePlayerCount();
-});
 
 function updatePlayerCount() {
     const playerDivs = document.querySelectorAll('#selected-players div');
@@ -307,13 +372,6 @@ function saveSelectedPredefinedPlayers() {
     updatePlayerCount();
 }
 
-document.getElementById('save-selected-players').addEventListener('click', () => {
-    saveSelectedPredefinedPlayers();
-    // Close modal after saving
-    const addPlayerModal = bootstrap.Modal.getInstance(document.getElementById('addPlayerModal'));
-    addPlayerModal.hide();
-});
-
 // Function to shuffle an array (Fisher-Yates Shuffle)
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -321,37 +379,6 @@ function shuffleArray(array) {
         [array[i], array[j]] = [array[j], array[i]]; // Swap elements
     }
 }
-
-document.getElementById('create-matches').addEventListener('click', () => {
-    const selectedPlayers = Array.from(document.querySelectorAll('#selected-players div'))
-        .filter(player => !player.classList.contains('inactive'))
-        .map(player => player.textContent);
-    shuffleArray(selectedPlayers);
-    // Target the #matches-list for clearing and adding matches
-    const matchesList = document.getElementById('matches-list');
-    matchesList.innerHTML = ''; // Clear only the matches list
-    const matches = [];
-    let restingPlayers = [];
-    for (let i = 0; i < selectedPlayers.length; i += 4) {
-        if (i + 3 < selectedPlayers.length) {
-            const matchData = {
-                court: Math.floor(i / 4) + 1, // Calculate court number
-                teamOne: [selectedPlayers[i], selectedPlayers[i + 1]],
-                teamTwo: [selectedPlayers[i + 2], selectedPlayers[i + 3]]
-            };
-            matches.push(matchData);
-        } else {
-            restingPlayers = selectedPlayers.slice(i);
-            break; // Exit the loop as we've handled all players
-        }
-    }
-    const dataToSave = {
-        matches: matches, resting: restingPlayers
-    };
-    localStorage.setItem('matchesData', JSON.stringify(dataToSave));
-    displaySavedMatches();
-    createBouncingBalls();
-});
 
 let ballsRunning = false;
 
@@ -416,29 +443,3 @@ function createBouncingBalls() {
     }, 7000); // Stop everything after 5 seconds
 }
 
-document.getElementById('new-matches').addEventListener('click', () => {
-    // Show the Bootstrap modal
-    const newSessionModal = new bootstrap.Modal(document.getElementById('newSessionModal'));
-    newSessionModal.show();
-});
-
-document.getElementById('confirmNewSession').addEventListener('click', () => {
-    // This code runs when the "New Session" button in the modal is clicked
-    // Unselect all players
-    document.querySelectorAll('.predefined-player.selected').forEach(player => {
-        player.classList.remove('selected');
-    });
-    // Clear only the matches display, preserving the "New" button and header
-    document.getElementById('matches-list').innerHTML = ''; // Clear matches
-    // Clear selected players from localStorage
-    localStorage.removeItem('selectedPlayers');
-    localStorage.removeItem('matchesData');
-
-    // Optionally, clear the player names display if you have a separate list for that
-    document.getElementById('selected-players').innerHTML = '';
-
-    // Close the modal after performing the actions
-    const newSessionModal = bootstrap.Modal.getInstance(document.getElementById('newSessionModal'));
-    newSessionModal.hide();
-    updateNoMatchesMessage();
-});
