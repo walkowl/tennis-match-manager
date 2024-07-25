@@ -138,11 +138,11 @@ function getPlayerList() {
     // Parse the URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const listUrl = urlParams.get('players_url');
-    const overwritePlayers = urlParams.get('overwrite_players') === 'true';
     // Attempt to get players from storage
     let players = getPlayerFromStorage();
+    const overwritePlayers = urlParams.get('overwrite_players') === 'true' || players !== defaultPlayers;
     // If players exist and we're not overwriting, return them
-    if (players && players.length > 0 && !overwritePlayers && players !== defaultPlayers) {
+    if (players && players.length > 0 && !overwritePlayers) {
         return Promise.resolve(players);
     }
     players = defaultPlayers
