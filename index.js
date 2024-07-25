@@ -133,6 +133,10 @@ function savePlayersInStorage(players) {
     localStorage.setItem('players', JSON.stringify(players));
 }
 
+function compareArrays(array1, array2) {
+    return JSON.stringify(array1) === JSON.stringify(array2)
+}
+
 function getPlayerList() {
     let defaultPlayers = ["Example player 1", "Example player 2", "Example player 3"];
     // Parse the URL parameters
@@ -140,7 +144,7 @@ function getPlayerList() {
     const listUrl = urlParams.get('players_url');
     // Attempt to get players from storage
     let players = getPlayerFromStorage();
-    const overwritePlayers = urlParams.get('overwrite_players') === 'true' || players !== defaultPlayers;
+    const overwritePlayers = urlParams.get('overwrite_players') === 'true' || compareArrays(players, defaultPlayers) === true || players === null;
     // If players exist and we're not overwriting, return them
     if (players && players.length > 0 && !overwritePlayers) {
         return Promise.resolve(players);
@@ -169,6 +173,7 @@ function getPlayerList() {
             });
     } else {
         // If no listUrl is provided or not overwriting, return the stored players or an empty array
+        savePlayersInStorage(players);
         return Promise.resolve(players || []);
     }
 }
