@@ -134,17 +134,18 @@ function savePlayersInStorage(players) {
 }
 
 function getPlayerList() {
+    let defaultPlayers = ["Example player 1", "Example player 2", "Example player 3"];
     // Parse the URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const listUrl = urlParams.get('players_url');
-        const overwritePlayers = urlParams.get('overwrite_players') === 'true';
+    const overwritePlayers = urlParams.get('overwrite_players') === 'true';
     // Attempt to get players from storage
     let players = getPlayerFromStorage();
     // If players exist and we're not overwriting, return them
-    if (players && players.length > 0 && !overwritePlayers) {
+    if (players && players.length > 0 && !overwritePlayers && players !== defaultPlayers) {
         return Promise.resolve(players);
     }
-    players = ["Example player 1", "Example player 2", "Example player 3"];
+    players = defaultPlayers
     // If a list URL is provided and (players don't exist or we're overwriting), fetch the list
     if (listUrl && (!players || overwritePlayers)) {
         return fetch(listUrl)
@@ -171,16 +172,6 @@ function getPlayerList() {
         return Promise.resolve(players || []);
     }
 }
-
-// function getPlayerList() {
-//     let players = getPlayerFromStorage();
-//     if (!players) {
-//         players = ["Gareth T", "Joe A", "Peter C", "Rod Berwick", "Bill Wallace", "David Phillips", "Wayne Perry", "Anthony Mina", "Gary Hodgson", "Wal Merak", "Sue Withers", "Tom Sullivan", "Alton Bowen", "Greg Nordsvan", "Stewart Johnston", "Andrus Tonismae", "Dave Williams", "Ian Manning", "Peter Rufford", "Pat Dunkin", "Mark Bailey", "John Reeves", "Bob Bear", "Peter Beiers", "Lukas Walkow", "Allan Large", "Paul Warwick", "Peter Oliver", "Maurie Barry", "Brian Morgan", "Graham Harding", "Peter Amodio", "Ron Graham", "Andrew Kirkup", "John Dring", "Mark Porter", "Ross Leonard", "Fred Hodges", "Peter Hart", "Greg Mccabe", "Lloyd Newlands"];
-//         savePlayersInStorage(players);
-//     }
-//     players.sort((a, b) => a.localeCompare(b));
-//     return players;
-// }
 
 function displayPlayers(players) {
     const predefinedPlayersList = document.getElementById('predefined-players-list');
