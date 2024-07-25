@@ -113,6 +113,7 @@ function addSelectedPlayers() {
     if (savedSelectedPlayers && savedSelectedPlayers.length > 0) {
         const playerNamesContainer = document.getElementById('selected-players');
         playerNamesContainer.innerHTML = ''; // Clear the container before adding updated items
+        savedSelectedPlayers.sort((a, b) => a.playerName.localeCompare(b.playerName));
         savedSelectedPlayers.forEach(player => {
             displayPlayerName(player, playerNamesContainer);
         });
