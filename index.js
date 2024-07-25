@@ -70,6 +70,7 @@ document.getElementById('confirmNewSession').addEventListener('click', () => {
     // Close the modal after performing the actions
     const newSessionModal = bootstrap.Modal.getInstance(document.getElementById('newSessionModal'));
     newSessionModal.hide();
+    updatePlayerCount();
     updateNoMatchesMessage();
 });
 
