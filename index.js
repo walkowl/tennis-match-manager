@@ -1,17 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const players = getPlayerList();
+    getPlayerList().then(players => {
+        displayPlayers(players);
+        setupEventListeners();
+        displaySavedMatches();
 
-    displayPlayers(players);
-    setupEventListeners();
-    displaySavedMatches();
-
-    // Add event listener to the "Add Player" button to open the modal
-    const addPlayerButton = document.getElementById('add-player');
-    addPlayerButton.addEventListener('click', () => {
-        const addPlayerModal = new bootstrap.Modal(document.getElementById('addPlayerModal'));
-        addPlayerModal.show();
+        // Add event listener to the "Add Player" button to open the modal
+        const addPlayerButton = document.getElementById('add-player');
+        addPlayerButton.addEventListener('click', () => {
+            const addPlayerModal = new bootstrap.Modal(document.getElementById('addPlayerModal'));
+            addPlayerModal.show();
+        });
+        updatePlayerCount();
     });
-    updatePlayerCount();
+
 });
 
 document.getElementById('create-matches').addEventListener('click', () => {
@@ -133,14 +134,53 @@ function savePlayersInStorage(players) {
 }
 
 function getPlayerList() {
+    // Parse the URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const listUrl = urlParams.get('players_url');
+        const overwritePlayers = urlParams.get('overwrite_players') === 'true';
+    // Attempt to get players from storage
     let players = getPlayerFromStorage();
-    if (!players) {
-        players = ["Rod Berwick", "Bill Wallace", "David Phillips", "Wayne Perry", "Anthony Mina", "Gary Hodgson", "Wal Merak", "Sue Withers", "Tom Sullivan", "Alton Bowen", "Greg Nordsvan", "Stewart Johnston", "Andrus Tonismae", "Dave Williams", "Ian Manning", "Peter Rufford", "Pat Dunkin", "Mark Bailey", "John Reeves", "Bob Bear", "Peter Beiers", "Lukas Walkow", "Allan Large", "Paul Warwick", "Peter Oliver", "Maurie Barry", "Brian Morgan", "Graham Harding", "Peter Amodio", "Ron Graham", "Andrew Kirkup", "John Dring", "Mark Porter", "Ross Leonard", "Fred Hodges", "Peter Hart", "Greg Mccabe", "Lloyd Newlands"];
-        savePlayersInStorage(players);
+    // If players exist and we're not overwriting, return them
+    if (players && players.length > 0 && !overwritePlayers) {
+        return Promise.resolve(players);
     }
-    players.sort((a, b) => a.localeCompare(b));
-    return players;
+    players = ["Example player 1", "Example player 2", "Example player 3"];
+    // If a list URL is provided and (players don't exist or we're overwriting), fetch the list
+    if (listUrl && (!players || overwritePlayers)) {
+        return fetch(listUrl)
+            .then(response => response.text())
+            .then(text => {
+                // Split the text by new lines to get an array of player names
+                let fetchedPlayers = text.split('\n').map(player => player.trim()).filter(player => player);
+                // Save the fetched players in storage if we're overwriting or no players were previously stored
+                if (overwritePlayers || !players) {
+                    savePlayersInStorage(fetchedPlayers);
+                }
+                console.log(fetchedPlayers.length + ' players fetched added! Enjoy!');
+                return fetchedPlayers;
+            })
+            .catch(error => {
+                console.error('Failed to fetch player list:', error);
+                // If fetching fails, return the players from storage or an empty array
+                savePlayersInStorage(players);
+                return Promise.resolve(players);
+
+            });
+    } else {
+        // If no listUrl is provided or not overwriting, return the stored players or an empty array
+        return Promise.resolve(players || []);
+    }
 }
+
+// function getPlayerList() {
+//     let players = getPlayerFromStorage();
+//     if (!players) {
+//         players = ["Gareth T", "Joe A", "Peter C", "Rod Berwick", "Bill Wallace", "David Phillips", "Wayne Perry", "Anthony Mina", "Gary Hodgson", "Wal Merak", "Sue Withers", "Tom Sullivan", "Alton Bowen", "Greg Nordsvan", "Stewart Johnston", "Andrus Tonismae", "Dave Williams", "Ian Manning", "Peter Rufford", "Pat Dunkin", "Mark Bailey", "John Reeves", "Bob Bear", "Peter Beiers", "Lukas Walkow", "Allan Large", "Paul Warwick", "Peter Oliver", "Maurie Barry", "Brian Morgan", "Graham Harding", "Peter Amodio", "Ron Graham", "Andrew Kirkup", "John Dring", "Mark Porter", "Ross Leonard", "Fred Hodges", "Peter Hart", "Greg Mccabe", "Lloyd Newlands"];
+//         savePlayersInStorage(players);
+//     }
+//     players.sort((a, b) => a.localeCompare(b));
+//     return players;
+// }
 
 function displayPlayers(players) {
     const predefinedPlayersList = document.getElementById('predefined-players-list');
