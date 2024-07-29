@@ -103,7 +103,7 @@ function displaySavedMatches() {
 }
 
 function updatePlayerCount() {
-    const playerDivs = document.querySelectorAll('#selected-players div');
+    const playerDivs = document.querySelectorAll('#selected-players div:not(.inactive)');
     const count = playerDivs.length;
     const playerCountSpan = document.getElementById("player-count");
     playerCountSpan.textContent = `(${count})`;
@@ -257,6 +257,7 @@ function clickSelectedPlayersListener() {
                 }
                 // Update localStorage with the modified savedSelectedPlayers array
                 localStorage.setItem('selectedPlayers', JSON.stringify(savedSelectedPlayers));
+                updatePlayerCount();
             }
         }
     });
