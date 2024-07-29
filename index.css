@@ -181,6 +181,10 @@ html, body {
     font-size: 1.5em !important;
 }
 
+.inactivePlayers {
+    font-size: 1.4em !important;
+}
+
 .btn-mid {
     font-size: 1.15em !important;
 }

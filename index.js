@@ -16,9 +16,33 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.getElementById('create-matches').addEventListener('click', () => {
+    const inactivePlayers = Array.from(document.querySelectorAll('#selected-players div'))
+        .filter(player => player.classList.contains('inactive'))
+        .map(player => player.textContent);
+
+    // This part replaces the confirm dialog in your existing code
+    if (inactivePlayers.length > 0) {
+        document.getElementById('inactive-players-list').innerHTML = `The following players are marked as inactive and will not be included in the matches: </br></br> <span class="inactivePlayers">${inactivePlayers.join('</br>')}</span>`;
+        const inactivePlayersModal = new bootstrap.Modal(document.getElementById('inactivePlayersModal'));
+        inactivePlayersModal.show();
+    } else {
+        proceedWithMatchCreation(); // Proceed directly if no inactive players
+    }
+
+
+});
+
+document.getElementById('confirmInactivePlayers').addEventListener('click', () => {
+    const inactivePlayersModal = bootstrap.Modal.getInstance(document.getElementById('inactivePlayersModal'));
+    inactivePlayersModal.hide();
+    proceedWithMatchCreation(); // Function to continue with match creation
+});
+
+function proceedWithMatchCreation() {
     const selectedPlayers = Array.from(document.querySelectorAll('#selected-players div'))
         .filter(player => !player.classList.contains('inactive'))
         .map(player => player.textContent);
+
     shuffleArray(selectedPlayers);
     // Target the #matches-list for clearing and adding matches
     const matchesList = document.getElementById('matches-list');
@@ -44,7 +68,7 @@ document.getElementById('create-matches').addEventListener('click', () => {
     localStorage.setItem('matchesData', JSON.stringify(dataToSave));
     displaySavedMatches();
     createBouncingBalls();
-});
+}
 
 document.getElementById('new-matches').addEventListener('click', () => {
     // Show the Bootstrap modal
