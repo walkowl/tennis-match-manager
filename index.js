@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.getElementById('create-matches').addEventListener('click', () => {
     const inactivePlayers = Array.from(document.querySelectorAll('#selected-players div'))
-        .filter(player => player.classList.contains('inactive'))
+        .filter(player => player.classList.contains('inactive') || player.classList.contains('sitout-2') || player.classList.contains('sitout-1'))
         .map(player => player.textContent);
 
     // This part replaces the confirm dialog in your existing code
@@ -39,27 +39,37 @@ document.getElementById('confirmInactivePlayers').addEventListener('click', () =
 });
 
 function proceedWithMatchCreation() {
-    const selectedPlayers = Array.from(document.querySelectorAll('#selected-players div'))
-        .filter(player => !player.classList.contains('inactive'))
-        .map(player => player.textContent);
-
+    const allPlayers = Array.from(document.querySelectorAll('#selected-players div'));
+    const selectedPlayers = allPlayers.filter(player => {
+        if (player.classList.contains('inactive')) {
+            return false;
+        } else if (player.classList.contains('sitout-2')) {
+            player.classList.remove('sitout-2');
+            player.classList.add('sitout-1');
+            return false;
+        } else if (player.classList.contains('sitout-1')) {
+            player.classList.remove('sitout-1');
+            // They will become active in the next match so do nothing special here
+            return false;
+        }
+        return true;
+    }).map(player => player.textContent);
     shuffleArray(selectedPlayers);
-    // Target the #matches-list for clearing and adding matches
     const matchesList = document.getElementById('matches-list');
-    matchesList.innerHTML = ''; // Clear only the matches list
+    matchesList.innerHTML = '';
     const matches = [];
     let restingPlayers = [];
     for (let i = 0; i < selectedPlayers.length; i += 4) {
         if (i + 3 < selectedPlayers.length) {
             const matchData = {
-                court: Math.floor(i / 4) + 1, // Calculate court number
+                court: Math.floor(i / 4) + 1,
                 teamOne: [selectedPlayers[i], selectedPlayers[i + 1]],
                 teamTwo: [selectedPlayers[i + 2], selectedPlayers[i + 3]]
             };
             matches.push(matchData);
         } else {
             restingPlayers = selectedPlayers.slice(i);
-            break; // Exit the loop as we've handled all players
+            break;
         }
     }
     const dataToSave = {
@@ -69,6 +79,7 @@ function proceedWithMatchCreation() {
     displaySavedMatches();
     createBouncingBalls();
 }
+
 
 document.getElementById('new-matches').addEventListener('click', () => {
     // Show the Bootstrap modal
@@ -261,31 +272,40 @@ function setupEventListeners() {
 function clickSelectedPlayersListener() {
     const container = document.getElementById('selected-players');
     container.addEventListener('click', function (event) {
-        // Check if the clicked element has the class 'selected-player'
         if (event.target.classList.contains('selected-player')) {
             const playerElement = event.target;
-            const playerName = playerElement.textContent; // Assuming the player's name is the text content of the clicked element
+            const playerName = playerElement.textContent;
             const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers')) || [];
-            // Find the player in the savedSelectedPlayers array
             const playerIndex = savedSelectedPlayers.findIndex(player => player.playerName === playerName);
             if (playerIndex !== -1) {
-                // Toggle the 'inactive' class on the player element
+                // Cycle through the statuses: none -> sitout-1 -> sitout-2 -> inactive -> none
                 if (playerElement.classList.contains('inactive')) {
                     playerElement.classList.remove('inactive');
-                    // Remove the 'inactive' property from the player object
                     delete savedSelectedPlayers[playerIndex].inactive;
-                } else {
+                } else if (playerElement.classList.contains('sitout-2')) {
+                    playerElement.classList.remove('sitout-2');
                     playerElement.classList.add('inactive');
-                    // Add the 'inactive' property to the player object
                     savedSelectedPlayers[playerIndex].inactive = true;
+                    delete savedSelectedPlayers[playerIndex].sitout;
+                } else if (playerElement.classList.contains('sitout-1')) {
+                    playerElement.classList.remove('sitout-1');
+                    playerElement.classList.add('sitout-2');
+                    savedSelectedPlayers[playerIndex].sitout = 2;
+                } else {
+                    playerElement.classList.add('sitout-1');
+                    savedSelectedPlayers[playerIndex].sitout = 1;
                 }
-                // Update localStorage with the modified savedSelectedPlayers array
+                // Remove unnecessary properties
+                if (!playerElement.classList.contains('sitout-1') && !playerElement.classList.contains('sitout-2')) {
+                    delete savedSelectedPlayers[playerIndex].sitout;
+                }
                 localStorage.setItem('selectedPlayers', JSON.stringify(savedSelectedPlayers));
                 updatePlayerCount();
             }
         }
     });
 }
+
 
 let isEditMode = false; // Track the state of edit mode
 

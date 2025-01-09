@@ -195,6 +195,19 @@ html, body {
     color: #777;
 }
 
+#selected-players .selected-player.sitout-1 {
+    text-decoration: line-through;
+    background-color: #0a3622;
+    color: #ddd;
+}
+
+#selected-players .selected-player.sitout-2 {
+    text-decoration: line-through;
+    background-color: #a52834;
+    color: #aaa;
+}
+
+
 #selected-players .selected-player {
     cursor: pointer;
 }
