@@ -6,7 +6,7 @@ let playerPairings = {};
 
 document.addEventListener('DOMContentLoaded', () => {
     getPlayerList().then(players => {
-        initializePlayerTracking(players);
+        loadMatchTracking();
         displayPlayers(players);
         setupEventListeners();
         displaySavedMatches();
@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializePlayerTracking(players) {
+    console.log("Initializing player tracking...");
     players.forEach(player => {
         playerMatchCounts[player] = 0;
         playerPairings[player] = {};
@@ -112,6 +113,17 @@ function proceedWithMatchCreation() {
         }
         return true;
     }).map(player => player.textContent);
+    // Initialize player tracking data if not present
+    activePlayers.forEach(player => {
+        if (!(player in playerMatchCounts)) {
+            playerMatchCounts[player] = 0;
+        }
+        if (!(player in playerPairings)) {
+            playerPairings[player] = {};
+        }
+    });
+    // Shuffle players to introduce randomness
+    shuffleArray(activePlayers);
     const sortedPlayers = sortPlayersByMatchCounts(activePlayers);
     const matchesList = document.getElementById('matches-list');
     matchesList.innerHTML = '';
@@ -121,8 +133,14 @@ function proceedWithMatchCreation() {
         if (i + 3 < sortedPlayers.length) {
             let teamOne = [sortedPlayers[i], sortedPlayers[i + 1]];
             let teamTwo = [sortedPlayers[i + 2], sortedPlayers[i + 3]];
+            // Check for existing pairings and swap if necessary
             if (playerPairings[teamOne[0]][teamOne[1]] || playerPairings[teamTwo[0]][teamTwo[1]]) {
+                // Try swapping players to avoid repeats
                 [teamOne[1], teamTwo[0]] = [teamTwo[0], teamOne[1]];
+                if (playerPairings[teamOne[0]][teamOne[1]] || playerPairings[teamTwo[0]][teamTwo[1]]) {
+                    // If still problematic, try another swap
+                    [teamOne[1], teamTwo[1]] = [teamTwo[1], teamOne[1]];
+                }
             }
             matches.push({ court: Math.floor(i / 4) + 1, teamOne, teamTwo });
         } else {
@@ -175,6 +193,8 @@ document.getElementById('confirmNewSession').addEventListener('click', () => {
     localStorage.removeItem('matchesData');
     localStorage.removeItem('playerMatchCounts');
     localStorage.removeItem('playerPairings');
+
+    initializePlayerTracking(players);
 
     // Clear match tracking data
     playerMatchCounts = {};
