@@ -199,12 +199,44 @@ html, body {
     text-decoration: line-through;
     background-color: #0a3622;
     color: #ddd;
+    position: relative; /* Ensure positioning context for the pseudo-element */
+    padding-right: 40px; /* Add padding to accommodate the sit-out box */
+}
+
+#selected-players .selected-player.sitout-1::after {
+    content: "1";
+    background-color: #444;
+    color: #fff;
+    font-size: 0.8em;
+    border-radius: 3px;
+    padding: 2px 6px;
+    position: absolute;
+    right: 5px; /* Position it to the right edge */
+    top: 50%;
+    transform: translateY(-50%); /* Center it vertically */
+    text-decoration: none; /* Ensure the number isn't crossed out */
 }
 
 #selected-players .selected-player.sitout-2 {
     text-decoration: line-through;
     background-color: #a52834;
     color: #aaa;
+    position: relative; /* Ensure positioning context for the pseudo-element */
+    padding-right: 40px; /* Add padding to accommodate the sit-out box */
+}
+
+#selected-players .selected-player.sitout-2::after {
+    content: "2";
+    background-color: #444;
+    color: #fff;
+    font-size: 0.8em;
+    border-radius: 3px;
+    padding: 2px 6px;
+    position: absolute;
+    right: 5px; /* Position it to the right edge */
+    top: 50%;
+    transform: translateY(-50%); /* Center it vertically */
+    text-decoration: none; /* Ensure the number isn't crossed out */
 }
 
 
