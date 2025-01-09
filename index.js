@@ -627,3 +627,19 @@ function createBouncingBalls() {
     }, 7000); // Stop everything after 5 seconds
 }
 
+document.getElementById('clear-tracking').addEventListener('click', () => {
+    // Show the Bootstrap modal for confirmation
+    const clearTrackingModal = new bootstrap.Modal(document.getElementById('clearTrackingModal'));
+    clearTrackingModal.show();
+});
+document.getElementById('confirmClearTracking').addEventListener('click', () => {
+    // Clear fairness tracking data
+    playerMatchCounts = {};
+    playerPairings = {};
+    // Update local storage
+    saveMatchTracking();
+    // Close the modal after clearing
+    const clearTrackingModal = bootstrap.Modal.getInstance(document.getElementById('clearTrackingModal'));
+    clearTrackingModal.hide();
+});
+
