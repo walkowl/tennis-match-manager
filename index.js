@@ -87,9 +87,9 @@ createMatchesButton.addEventListener('click', () => {
     } else {
         proceedWithMatchCreation(); // Proceed directly if no inactive players
     }
-    // Start the countdown timer
-    isTimerActive = true;
-    startCountdown(20); // 20 seconds countdown
+    // // Start the countdown timer
+    // isTimerActive = true;
+    // startCountdown(20); // 20 seconds countdown
 });
 
 document.getElementById('confirmInactivePlayers').addEventListener('click', () => {
