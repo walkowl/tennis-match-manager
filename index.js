@@ -15,12 +15,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-document.getElementById('create-matches').addEventListener('click', () => {
+let createMatchesButton = document.getElementById('create-matches');
+let isTimerActive = false;
+let countdownInterval = null;
+
+function startCountdown(duration) {
+    let timeRemaining = duration;
+    createMatchesButton.disabled = true; // Disable the button
+    createMatchesButton.textContent = `Create matches (${timeRemaining}s)`;
+    countdownInterval = setInterval(() => {
+        timeRemaining--;
+        createMatchesButton.textContent = `Create matches (${timeRemaining}s)`;
+        if (timeRemaining <= 0) {
+            clearInterval(countdownInterval);
+            createMatchesButton.textContent = 'Create matches';
+            createMatchesButton.disabled = false; // Re-enable the button
+            isTimerActive = false;
+        }
+    }, 1000);
+}
+
+createMatchesButton.addEventListener('click', () => {
+    if (isTimerActive) return; // Exit if the timer is active
     const inactivePlayers = Array.from(document.querySelectorAll('#selected-players div'))
         .filter(player => player.classList.contains('inactive') || player.classList.contains('sitout-2') || player.classList.contains('sitout-1'))
         .map(player => player.textContent);
-
-    // This part replaces the confirm dialog in your existing code
     if (inactivePlayers.length > 0) {
         document.getElementById('inactive-players-list').innerHTML = `The following players are marked as inactive and will not be included in the matches: </br></br> <span class="inactivePlayers">${inactivePlayers.join('</br>')}</span>`;
         const inactivePlayersModal = new bootstrap.Modal(document.getElementById('inactivePlayersModal'));
@@ -28,8 +47,9 @@ document.getElementById('create-matches').addEventListener('click', () => {
     } else {
         proceedWithMatchCreation(); // Proceed directly if no inactive players
     }
-
-
+    // Start the countdown timer
+    isTimerActive = true;
+    startCountdown(20); // 20 seconds countdown
 });
 
 document.getElementById('confirmInactivePlayers').addEventListener('click', () => {
