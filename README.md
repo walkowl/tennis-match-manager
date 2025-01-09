@@ -1,19 +1,22 @@
 # Tennis Match Manager
 
-Tennis Match Manager is a web application designed to simplify the organization of tennis matches. It allows users to
-select players, create matches, and manage sessions with ease. The application is built with a responsive design, making
-it accessible on various devices, including desktops, tablets, and smartphones.
+Tennis Match Manager is a web application designed to help you organize and manage tennis matches efficiently.
 
 ## Features
 
-- **Player Selection**: Easily select players from a predefined list or add new players to the list.
-- **Match Creation**: Automatically generate matches based on the selected players, ensuring everyone gets a chance to
-  play.
-- **Session Management**: Start new sessions with a single click, clearing previous selections and matches to prepare
-  for a new round of games.
-- **Progressive Web App (PWA)**: Install the application on your device for quick and easy access, just like a native
-  app.
-- **Responsive Design**: Enjoy a seamless experience across different devices and screen sizes.
+- **Player Selection**: Easily select players for matches from a predefined list or add new players.
+- **Match Creation**: Automatically generate matches based on selected players, ensuring balanced teams.
+- **Fairness Tracking**: Implemented a system to ensure fairness in match creation by tracking player participation and pairings. This system aims to balance player involvement across matches.
+- **Clear Tracking Data**: A new feature that allows users to clear match fairness tracking data. This action resets all match history, providing a fresh start for tracking future matches.
+- **Session Management**: Start new sessions to reset player selections and match history.
+
+## Getting Started
+
+To get started with Tennis Match Manager, follow these steps:
+
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/your-repo/tennis-match-manager.git
 
 ## Installation
 
