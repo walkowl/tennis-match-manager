@@ -1,5 +1,12 @@
+let createMatchesButton = document.getElementById('create-matches');
+let isTimerActive = false;
+let countdownInterval = null;
+let playerMatchCounts = {};
+let playerPairings = {};
+
 document.addEventListener('DOMContentLoaded', () => {
     getPlayerList().then(players => {
+        initializePlayerTracking(players);
         displayPlayers(players);
         setupEventListeners();
         displaySavedMatches();
@@ -15,9 +22,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-let createMatchesButton = document.getElementById('create-matches');
-let isTimerActive = false;
-let countdownInterval = null;
+function initializePlayerTracking(players) {
+    players.forEach(player => {
+        playerMatchCounts[player] = 0;
+        playerPairings[player] = {};
+    });
+}
+
+function updateMatchTracking(matches) {
+    matches.forEach(match => {
+        match.teamOne.forEach(player => {
+            playerMatchCounts[player] = (playerMatchCounts[player] || 0) + 1;
+            match.teamOne.forEach(teammate => {
+                if (player !== teammate) {
+                    playerPairings[player][teammate] = (playerPairings[player][teammate] || 0) + 1;
+                }
+            });
+            match.teamTwo.forEach(opponent => {
+                playerPairings[player][opponent] = (playerPairings[player][opponent] || 0) + 1;
+            });
+        });
+        match.teamTwo.forEach(player => {
+            playerMatchCounts[player] = (playerMatchCounts[player] || 0) + 1;
+            match.teamTwo.forEach(teammate => {
+                if (player !== teammate) {
+                    playerPairings[player][teammate] = (playerPairings[player][teammate] || 0) + 1;
+                }
+            });
+            match.teamOne.forEach(opponent => {
+                playerPairings[player][opponent] = (playerPairings[player][opponent] || 0) + 1;
+            });
+        });
+    });
+    console.log("Player Match Counts:", playerMatchCounts);
+    console.log("Player Pairings:", playerPairings);
+}
 
 function startCountdown(duration) {
     let timeRemaining = duration;
@@ -60,7 +99,7 @@ document.getElementById('confirmInactivePlayers').addEventListener('click', () =
 
 function proceedWithMatchCreation() {
     const allPlayers = Array.from(document.querySelectorAll('#selected-players div'));
-    const selectedPlayers = allPlayers.filter(player => {
+    const activePlayers = allPlayers.filter(player => {
         if (player.classList.contains('inactive')) {
             return false;
         } else if (player.classList.contains('sitout-2')) {
@@ -69,35 +108,51 @@ function proceedWithMatchCreation() {
             return false;
         } else if (player.classList.contains('sitout-1')) {
             player.classList.remove('sitout-1');
-            // They will become active in the next match so do nothing special here
             return false;
         }
         return true;
     }).map(player => player.textContent);
-    shuffleArray(selectedPlayers);
+    const sortedPlayers = sortPlayersByMatchCounts(activePlayers);
     const matchesList = document.getElementById('matches-list');
     matchesList.innerHTML = '';
     const matches = [];
     let restingPlayers = [];
-    for (let i = 0; i < selectedPlayers.length; i += 4) {
-        if (i + 3 < selectedPlayers.length) {
-            const matchData = {
-                court: Math.floor(i / 4) + 1,
-                teamOne: [selectedPlayers[i], selectedPlayers[i + 1]],
-                teamTwo: [selectedPlayers[i + 2], selectedPlayers[i + 3]]
-            };
-            matches.push(matchData);
+    for (let i = 0; i < sortedPlayers.length; i += 4) {
+        if (i + 3 < sortedPlayers.length) {
+            let teamOne = [sortedPlayers[i], sortedPlayers[i + 1]];
+            let teamTwo = [sortedPlayers[i + 2], sortedPlayers[i + 3]];
+            if (playerPairings[teamOne[0]][teamOne[1]] || playerPairings[teamTwo[0]][teamTwo[1]]) {
+                [teamOne[1], teamTwo[0]] = [teamTwo[0], teamOne[1]];
+            }
+            matches.push({ court: Math.floor(i / 4) + 1, teamOne, teamTwo });
         } else {
-            restingPlayers = selectedPlayers.slice(i);
+            restingPlayers = sortedPlayers.slice(i);
             break;
         }
     }
-    const dataToSave = {
-        matches: matches, resting: restingPlayers
-    };
+    console.log("Created Matches:", matches);
+    console.log("Resting Players:", restingPlayers);
+    updateMatchTracking(matches);
+    const dataToSave = { matches: matches, resting: restingPlayers };
     localStorage.setItem('matchesData', JSON.stringify(dataToSave));
     displaySavedMatches();
     createBouncingBalls();
+}
+
+function sortPlayersByMatchCounts(players) {
+    return players.sort((a, b) => {
+        return playerMatchCounts[a] - playerMatchCounts[b];
+    });
+}
+
+function saveMatchTracking() {
+    localStorage.setItem('playerMatchCounts', JSON.stringify(playerMatchCounts));
+    localStorage.setItem('playerPairings', JSON.stringify(playerPairings));
+}
+
+function loadMatchTracking() {
+    playerMatchCounts = JSON.parse(localStorage.getItem('playerMatchCounts')) || {};
+    playerPairings = JSON.parse(localStorage.getItem('playerPairings')) || {};
 }
 
 
@@ -118,6 +173,12 @@ document.getElementById('confirmNewSession').addEventListener('click', () => {
     // Clear selected players from localStorage
     localStorage.removeItem('selectedPlayers');
     localStorage.removeItem('matchesData');
+    localStorage.removeItem('playerMatchCounts');
+    localStorage.removeItem('playerPairings');
+
+    // Clear match tracking data
+    playerMatchCounts = {};
+    playerPairings = {};
 
     // Optionally, clear the player names display if you have a separate list for that
     document.getElementById('selected-players').innerHTML = '';
