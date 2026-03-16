@@ -1,3 +1,5 @@
+const APP_VERSION_DATE = '2026-03-17';
+
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
 let playerTeammatePairings = {};
@@ -296,6 +298,7 @@ function setupEventListeners() {
     // Add event listener for the toggle edit mode button
     document.getElementById('toggle-edit-mode').addEventListener('click', toggleEditMode);
     document.getElementById('player-list-label').addEventListener('click', createBouncingBalls);
+    document.getElementById('player-list-label').addEventListener('dblclick', showVersionInfo);
     clickSelectedPlayersListener();
 }
 
@@ -500,6 +503,15 @@ function saveSelectedPredefinedPlayers() {
     updatePlayerCount();
 }
 
+
+function showVersionInfo() {
+    const versionEl = document.getElementById('version-info');
+    versionEl.textContent = `Last updated: ${APP_VERSION_DATE}`;
+    versionEl.classList.add('visible');
+    setTimeout(() => {
+        versionEl.classList.remove('visible');
+    }, 3000);
+}
 
 let ballsRunning = false;
 
