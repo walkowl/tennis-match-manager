@@ -141,6 +141,16 @@ function validatePlayerName(playerName, existingPlayers, editingIndex) {
 }
 
 /**
+ * Filter players to find only those sitting out (not fully inactive).
+ * Returns names of players with sitout status.
+ */
+function filterSitoutPlayers(players) {
+    return players
+        .filter(p => p.sitout === 1 || p.sitout === 2)
+        .map(p => p.playerName);
+}
+
+/**
  * Parse a player list text (newline-separated) into an array of names.
  */
 function parsePlayerList(text) {
@@ -159,7 +169,8 @@ const LogicExports = {
     initializeNewPlayers,
     generateMatches,
     validatePlayerName,
-    parsePlayerList
+    parsePlayerList,
+    filterSitoutPlayers
 };
 
 if (typeof module !== 'undefined' && module.exports) {

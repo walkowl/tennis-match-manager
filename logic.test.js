@@ -415,6 +415,58 @@ describe('parsePlayerList', () => {
     });
 });
 
+describe('filterSitoutPlayers', () => {
+    test('returns only sitout players, not inactive ones', () => {
+        const players = [
+            { playerName: 'Alice' },
+            { playerName: 'Bob', sitout: 1 },
+            { playerName: 'Charlie', inactive: true },
+            { playerName: 'Dave', sitout: 2 },
+        ];
+        expect(Logic.filterSitoutPlayers(players)).toEqual(['Bob', 'Dave']);
+    });
+
+    test('returns empty array when no one is sitting out', () => {
+        const players = [
+            { playerName: 'Alice' },
+            { playerName: 'Bob', inactive: true },
+        ];
+        expect(Logic.filterSitoutPlayers(players)).toEqual([]);
+    });
+
+    test('returns empty array for all active players', () => {
+        const players = [
+            { playerName: 'Alice' },
+            { playerName: 'Bob' },
+        ];
+        expect(Logic.filterSitoutPlayers(players)).toEqual([]);
+    });
+
+    test('does not include fully inactive players', () => {
+        const players = [
+            { playerName: 'Alice', inactive: true },
+            { playerName: 'Bob', inactive: true },
+        ];
+        expect(Logic.filterSitoutPlayers(players)).toEqual([]);
+    });
+
+    test('handles empty player list', () => {
+        expect(Logic.filterSitoutPlayers([])).toEqual([]);
+    });
+
+    test('handles mix of all statuses', () => {
+        const players = [
+            { playerName: 'Active1' },
+            { playerName: 'Sitout1', sitout: 1 },
+            { playerName: 'Inactive1', inactive: true },
+            { playerName: 'Active2' },
+            { playerName: 'Sitout2', sitout: 2 },
+            { playerName: 'Inactive2', inactive: true },
+        ];
+        expect(Logic.filterSitoutPlayers(players)).toEqual(['Sitout1', 'Sitout2']);
+    });
+});
+
 describe('Integration: mid-session player fairness', () => {
     test('new players joining mid-session do not dominate match creation', () => {
         const counts = {};
