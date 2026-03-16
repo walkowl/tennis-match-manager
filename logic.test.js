@@ -393,7 +393,7 @@ describe('parsePlayerList', () => {
     test('splits by newlines and returns names and default skills', () => {
         const result = Logic.parsePlayerList('Alice\nBob\nCharlie');
         expect(result.names).toEqual(['Alice', 'Bob', 'Charlie']);
-        expect(result.skills).toEqual({ Alice: 5, Bob: 5, Charlie: 5 });
+        expect(result.skills).toEqual({ Alice: 3, Bob: 3, Charlie: 3 });
     });
 
     test('parses skill ratings from comma-separated format', () => {
@@ -402,17 +402,17 @@ describe('parsePlayerList', () => {
         expect(result.skills).toEqual({ Alice: 3, Bob: 5, Charlie: 1 });
     });
 
-    test('defaults to skill 5 when no skill specified', () => {
+    test('defaults to skill 3 when no skill specified', () => {
         const result = Logic.parsePlayerList('Alice\nBob,2');
-        expect(result.skills.Alice).toBe(5);
+        expect(result.skills.Alice).toBe(3);
         expect(result.skills.Bob).toBe(2);
     });
 
-    test('clamps invalid skill values to 5', () => {
+    test('clamps invalid skill values to 3', () => {
         const result = Logic.parsePlayerList('Alice,0\nBob,6\nCharlie,-1');
-        expect(result.skills.Alice).toBe(5);
-        expect(result.skills.Bob).toBe(5);
-        expect(result.skills.Charlie).toBe(5);
+        expect(result.skills.Alice).toBe(3);
+        expect(result.skills.Bob).toBe(3);
+        expect(result.skills.Charlie).toBe(3);
     });
 
     test('filters empty lines', () => {
@@ -443,9 +443,9 @@ describe('parsePlayerList', () => {
         expect(result.skills).toEqual({ Alice: 3, Bob: 4, Charlie: 5 });
     });
 
-    test('handles non-numeric skill values by defaulting to 5', () => {
+    test('handles non-numeric skill values by defaulting to 3', () => {
         const result = Logic.parsePlayerList('Alice,abc');
-        expect(result.skills.Alice).toBe(5);
+        expect(result.skills.Alice).toBe(3);
     });
 });
 
@@ -511,9 +511,9 @@ describe('getSkillGapPenalty', () => {
         expect(Logic.getSkillGapPenalty('A', 'B', { A: 1, B: 5 })).toBe(4);
     });
 
-    test('defaults to skill 5 for unknown players', () => {
+    test('defaults to skill 3 for unknown players', () => {
         expect(Logic.getSkillGapPenalty('A', 'B', {})).toBe(0);
-        expect(Logic.getSkillGapPenalty('A', 'B', { A: 2 })).toBe(3); // 5 - 2
+        expect(Logic.getSkillGapPenalty('A', 'B', { A: 2 })).toBe(1); // 3 - 2
     });
 });
 
@@ -528,8 +528,8 @@ describe('scoreMatch', () => {
         expect(Logic.scoreMatch(['A', 'B'], ['C', 'D'], skills)).toBe(8); // 10 vs 2
     });
 
-    test('defaults unknown players to skill 5', () => {
-        expect(Logic.scoreMatch(['A', 'B'], ['C', 'D'], {})).toBe(0); // all default 5
+    test('defaults unknown players to skill 3', () => {
+        expect(Logic.scoreMatch(['A', 'B'], ['C', 'D'], {})).toBe(0); // all default 3
     });
 });
 

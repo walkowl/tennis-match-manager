@@ -193,10 +193,10 @@ function parsePlayerList(text) {
     text.split('\n').map(line => line.trim()).filter(line => line).forEach(line => {
         const parts = line.split(',');
         const name = parts[0].trim();
-        const skill = parts.length > 1 ? parseInt(parts[1].trim(), 10) : 5;
+        const skill = parts.length > 1 ? parseInt(parts[1].trim(), 10) : 3;
         if (name) {
             names.push(name);
-            skills[name] = (skill >= 1 && skill <= 5) ? skill : 5;
+            skills[name] = (skill >= 1 && skill <= 5) ? skill : 3;
         }
     });
     return { names, skills };
@@ -208,8 +208,8 @@ function parsePlayerList(text) {
  * Returns a value 0-4 representing how many times less often they should play together.
  */
 function getSkillGapPenalty(playerA, playerB, skillRatings) {
-    const skillA = skillRatings[playerA] || 5;
-    const skillB = skillRatings[playerB] || 5;
+    const skillA = skillRatings[playerA] || 3;
+    const skillB = skillRatings[playerB] || 3;
     return Math.abs(skillA - skillB);
 }
 
@@ -218,8 +218,8 @@ function getSkillGapPenalty(playerA, playerB, skillRatings) {
  * Lower score = better match. Considers both within-team and between-team balance.
  */
 function scoreMatch(teamOne, teamTwo, skillRatings) {
-    const teamOneSkill = (skillRatings[teamOne[0]] || 5) + (skillRatings[teamOne[1]] || 5);
-    const teamTwoSkill = (skillRatings[teamTwo[0]] || 5) + (skillRatings[teamTwo[1]] || 5);
+    const teamOneSkill = (skillRatings[teamOne[0]] || 3) + (skillRatings[teamOne[1]] || 3);
+    const teamTwoSkill = (skillRatings[teamTwo[0]] || 3) + (skillRatings[teamTwo[1]] || 3);
     return Math.abs(teamOneSkill - teamTwoSkill);
 }
 
