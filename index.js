@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 10:12';
+const APP_VERSION_DATE = '2026-03-17 10:24';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
@@ -316,6 +316,7 @@ function setupEventListeners() {
     document.getElementById('toggle-edit-mode').addEventListener('click', toggleEditMode);
     document.getElementById('player-list-label').addEventListener('click', createBouncingBalls);
     document.getElementById('player-list-label').addEventListener('dblclick', showVersionInfo);
+    document.getElementById('matches-list').addEventListener('dblclick', toggleSkillBadges);
     clickSelectedPlayersListener();
 }
 
@@ -439,24 +440,39 @@ function updateNoMatchesMessage() {
 function createMatchElement(matchData) {
     const match = document.createElement('div');
     match.classList.add('match');
-    // Include court number in the match display
     const courtNumber = document.createElement('div');
     courtNumber.innerHTML = `<img src="assets/tennis-ball.png" alt="Court" width="24" height="24"> Court ${matchData.court}`;
     courtNumber.classList.add('court-number');
+    const skillRatings = getSkillRatings();
     const teamOne = document.createElement('div');
     teamOne.classList.add('team');
-    teamOne.innerHTML = `<div>${formatPlayerName(matchData.teamOne[0])}</div><div>${formatPlayerName(matchData.teamOne[1])}</div>`;
+    teamOne.innerHTML = `<div>${formatPlayerNameWithSkill(matchData.teamOne[0], skillRatings)}</div><div>${formatPlayerNameWithSkill(matchData.teamOne[1], skillRatings)}</div>`;
     const versus = document.createElement('div');
     versus.classList.add('versus');
     versus.textContent = 'vs';
     const teamTwo = document.createElement('div');
     teamTwo.classList.add('team');
-    teamTwo.innerHTML = `<div>${formatPlayerName(matchData.teamTwo[0])}</div><div>${formatPlayerName(matchData.teamTwo[1])}</div>`;
+    teamTwo.innerHTML = `<div>${formatPlayerNameWithSkill(matchData.teamTwo[0], skillRatings)}</div><div>${formatPlayerNameWithSkill(matchData.teamTwo[1], skillRatings)}</div>`;
     match.appendChild(courtNumber);
     match.appendChild(teamOne);
     match.appendChild(versus);
     match.appendChild(teamTwo);
     return match;
+}
+
+function formatPlayerNameWithSkill(playerName, skillRatings) {
+    const skill = skillRatings[playerName] || 3;
+    return `${Logic.formatPlayerName(playerName)} <span class="skill-badge">${skill}</span>`;
+}
+
+let skillTimeout = null;
+function toggleSkillBadges() {
+    const badges = document.querySelectorAll('.skill-badge');
+    badges.forEach(b => b.classList.add('skill-visible'));
+    if (skillTimeout) clearTimeout(skillTimeout);
+    skillTimeout = setTimeout(() => {
+        badges.forEach(b => b.classList.remove('skill-visible'));
+    }, 10000);
 }
 
 function formatPlayerName(playerName) {
