@@ -545,21 +545,32 @@ describe('findBestPairing', () => {
         expect(Math.abs(teamOneSkill - teamTwoSkill)).toBe(0);
     });
 
-    test('avoids repeated teammates even if skill balance is worse', () => {
+    test('avoids repeated teammates when skills are equal', () => {
         const pairings = { A: { B: 2 }, B: { A: 2 }, C: {}, D: {} };
         const skills = { A: 5, B: 5, C: 5, D: 5 };
-        // All skills equal, so should avoid A+B pairing
+        // All skills equal, so teammate variety becomes the deciding factor
         const result = Logic.findBestPairing(['A', 'B', 'C', 'D'], pairings, skills);
         const teamOneHasAB = result.teamOne.includes('A') && result.teamOne.includes('B');
         const teamTwoHasAB = result.teamTwo.includes('A') && result.teamTwo.includes('B');
         expect(teamOneHasAB || teamTwoHasAB).toBe(false);
     });
 
-    test('balances teammate history against skill when both matter', () => {
-        const pairings = { A: { C: 1 }, B: {}, C: { A: 1 }, D: {} };
+    test('prioritizes skill balance over teammate variety', () => {
+        const pairings = { A: { B: 3 }, B: { A: 3 }, C: {}, D: {} };
         const skills = { A: 5, B: 1, C: 5, D: 1 };
-        // A+C have history (penalty 10), A+B is skill-balanced (5+1=6 vs 5+1=6, gap 0)
-        // Should avoid A+C as teammates
+        // A+B have history but A(5)+B(1)=6 vs C(5)+D(1)=6 is perfectly balanced
+        // Should still pair A+B because skill balance is primary
+        const result = Logic.findBestPairing(['A', 'B', 'C', 'D'], pairings, skills);
+        const teamOneSkill = skills[result.teamOne[0]] + skills[result.teamOne[1]];
+        const teamTwoSkill = skills[result.teamTwo[0]] + skills[result.teamTwo[1]];
+        expect(Math.abs(teamOneSkill - teamTwoSkill)).toBe(0);
+    });
+
+    test('uses teammate variety as tiebreaker when skill balance is equal', () => {
+        const pairings = { A: { C: 1 }, B: {}, C: { A: 1 }, D: {} };
+        const skills = { A: 3, B: 3, C: 3, D: 3 };
+        // All skills equal — all splits have same skill gap (0)
+        // Should use teammate variety to break tie: avoid A+C
         const result = Logic.findBestPairing(['A', 'B', 'C', 'D'], pairings, skills);
         const teamOneHasAC = result.teamOne.includes('A') && result.teamOne.includes('C');
         const teamTwoHasAC = result.teamTwo.includes('A') && result.teamTwo.includes('C');

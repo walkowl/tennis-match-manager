@@ -116,8 +116,8 @@ function generateMatches(activePlayers, matchCounts, teammatePairings, skillRati
 /**
  * Find the best team pairing from a group of 4 players.
  * Evaluates all 3 possible team splits and picks the one with:
- *   1. Fewest repeated teammate pairings
- *   2. Best skill balance between teams (lowest gap)
+ *   1. Best skill balance between teams (primary)
+ *   2. Fewest repeated teammate pairings (tiebreaker)
  */
 function findBestPairing(group, teammatePairings, skillRatings) {
     // All 3 possible ways to split 4 players into 2 teams of 2
@@ -134,16 +134,16 @@ function findBestPairing(group, teammatePairings, skillRatings) {
     let bestScore = Infinity;
 
     splits.forEach(split => {
-        // Penalize repeated teammate pairings
+        // Penalize skill imbalance between teams (primary factor)
+        const skillGap = scoreMatch(split.teamOne, split.teamTwo, skillRatings);
+
+        // Penalize repeated teammate pairings (secondary factor)
         const repeatPenalty =
             getTeammateCount(split.teamOne[0], split.teamOne[1]) +
             getTeammateCount(split.teamTwo[0], split.teamTwo[1]);
 
-        // Penalize skill imbalance between teams
-        const skillGap = scoreMatch(split.teamOne, split.teamTwo, skillRatings);
-
-        // Combined score: teammate repeats are weighted more heavily
-        const score = (repeatPenalty * 10) + skillGap;
+        // Skill balance is prioritized; teammate variety is the tiebreaker
+        const score = (skillGap * 10) + repeatPenalty;
 
         if (score < bestScore) {
             bestScore = score;
