@@ -30,11 +30,11 @@ function updateMatchTracking(matches) {
 }
 
 createMatchesButton.addEventListener('click', () => {
-    const inactivePlayers = Array.from(document.querySelectorAll('#selected-players div'))
-        .filter(player => player.classList.contains('inactive') || player.classList.contains('sitout-2') || player.classList.contains('sitout-1'))
+    const sitoutPlayers = Array.from(document.querySelectorAll('#selected-players div'))
+        .filter(player => player.classList.contains('sitout-2') || player.classList.contains('sitout-1'))
         .map(player => player.textContent);
-    if (inactivePlayers.length > 0) {
-        document.getElementById('inactive-players-list').innerHTML = `The following players are marked as inactive and will not be included in the matches: </br></br> <span class="inactivePlayers">${inactivePlayers.join('</br>')}</span>`;
+    if (sitoutPlayers.length > 0) {
+        document.getElementById('inactive-players-list').innerHTML = `The following players are sitting out and will not be included in this round: </br></br> <span class="inactivePlayers">${sitoutPlayers.join('</br>')}</span>`;
         const inactivePlayersModal = new bootstrap.Modal(document.getElementById('inactivePlayersModal'));
         inactivePlayersModal.show();
     } else {

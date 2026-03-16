@@ -1,79 +1,89 @@
-# Tennis Match Manager
+# 🎾 Tennis Match Manager
 
-Tennis Match Manager is a web application designed to help you organize and manage tennis matches efficiently.
+A lightweight Progressive Web App (PWA) for managing tennis doubles matches. Designed for tennis groups that rotate players across courts and want fair, balanced pairings.
+
+**Live app:** [walkowl.github.io/tennis-match-manager](https://walkowl.github.io/tennis-match-manager/)
 
 ## Features
 
-- **Player Selection**: Easily select players for matches from a predefined list or add new players.
-- **Match Creation**: Automatically generate matches based on selected players, ensuring balanced teams.
-- **Fairness Tracking**: Implemented a system to ensure fairness in match creation by tracking player participation and pairings. This system aims to balance player involvement across matches.
-- **Clear Tracking Data**: A new feature that allows users to clear match fairness tracking data. This action resets all match history, providing a fresh start for tracking future matches.
-- **Session Management**: Start new sessions to reset player selections and match history.
+- **Smart match generation** — automatically creates doubles pairings across available courts
+- **Fairness tracking** — tracks match counts and teammate history to avoid repetitive pairings
+- **Mid-session flexibility** — players can join or leave during a session without disrupting fairness
+- **Player status cycling** — tap a player to cycle through: Active → Sit out 1 round → Sit out 2 rounds → Inactive → Active
+- **Custom player lists** — load players from a URL or manage them directly in the app
+- **Offline support** — works without internet as a PWA (installable on mobile)
+- **Persistent state** — all data saved to localStorage, survives page refreshes
 
-## Getting Started
+## Quick Start
 
-To get started with Tennis Match Manager, follow these steps:
+### With a custom player list
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/your-repo/tennis-match-manager.git
+Add `?players_url=` to load players from a text file (one name per line):
 
-## Installation
+```
+https://walkowl.github.io/tennis-match-manager/?players_url=https://example.com/players.txt
+```
 
-Tennis Match Manager is a Progressive Web App (PWA), which means you can install it on your Android or iOS device for
-quick and easy access. Here's how:
+### Default usage
 
-### Android
+Just open the app and add players manually via the Edit Mode.
 
-1. Open the Tennis Match Manager in your Chrome browser.
-2. Tap the menu icon (three dots) in the top right corner of the browser.
-3. Tap "Add to Home screen."
-4. You'll be prompted to name the shortcut before tapping the "Add" button.
-5. The app icon will now appear on your home screen, and you can use it like any other app.
+## How It Works
 
-### iOS
+1. **Select players** for the session from your player list
+2. **Tap "Create matches"** to generate fair court assignments
+3. Players with fewer matches get priority
+4. Teammate pairings are tracked and varied across rounds
+5. Players who can't fit on a court are listed as "Resting"
 
-1. Open the Tennis Match Manager in your Safari browser.
-2. Tap the share icon (the square with an arrow pointing out) at the bottom of the screen.
-3. Scroll down and tap "Add to Home Screen."
-4. You'll be prompted to name the shortcut before tapping the "Add" button.
-5. The app icon will now appear on your home screen, and you can use it like any other app.
+### Player Statuses
 
-## Usage
+| Status | Meaning |
+|--------|---------|
+| **Active** | Will be included in match generation |
+| **Sit out 1** | Skips the next round, then returns to active |
+| **Sit out 2** | Skips the next two rounds |
+| **Inactive** | Excluded from matches until manually reactivated |
 
-After installing the Tennis Match Manager on your device, simply tap the icon to launch the application. From there, you
-can start selecting players, creating matches, and managing your tennis sessions with ease. The intuitive interface
-makes it simple to navigate through the features, ensuring a smooth and efficient experience for organizing your tennis
-matches.
+## URL Parameters
 
-## Dynamic Player List Configuration
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `players_url` | URL to a newline-separated player list | `?players_url=https://example.com/players.txt` |
+| `overwrite_players` | Force reload players from URL | `?players_url=...&overwrite_players=true` |
 
-The application supports dynamically loading a list of predefined players from an external URL. This feature is
-particularly useful for initializing the application with a custom set of players without hardcoding them into the
-application or revealing sensitive information.
+## Tech Stack
 
-### Using URL Parameters
+- Vanilla JavaScript (no framework)
+- [Bootstrap 5](https://getbootstrap.com/) for UI components
+- [Matter.js](https://brm.io/matter-js/) for the bouncing balls Easter egg 🎾
+- [Workbox](https://developer.chrome.com/docs/workbox/) for service worker / offline support
+- [Jest](https://jestjs.io/) for unit testing
 
-To use this feature, you can provide the following URL parameters when accessing your application:
+## Development
 
-- `players_url`: Specifies the URL from which to fetch the list of players. Each player should be listed on a new line.
-- `overwrite_players`: A boolean value (`true` or `false`) that determines whether the fetched list of players should
-  overwrite any existing list stored in the application's local storage.
-  Example usage:
-  http://yourapplication.com/?players_url=https://example.com/path/to/players.txt&overwrite_players=true
+```bash
+# Install dependencies
+npm install
 
-### CORS Consideration
+# Run tests
+npm test
 
-Fetching from an external URL may lead to CORS policy issues. If the server doesn't include CORS headers, consider using
-a CORS proxy or configuring the server to include these headers. For development, a CORS proxy
-like `https://corsproxy.io/` can be used by prepending it to the `players_url`.
-**Important:** Ensure secure data handling, especially when using third-party CORS proxies. Prefer HTTPS to protect data
-in transit.
+# Tests run automatically on every git commit via pre-commit hook
+```
 
-#### Example with a CORS Proxy
+## Project Structure
 
-To use a CORS proxy (for example https://corsproxy.io/), prepend the proxy's URL to your `players_url` parameter:
-http://yourapplication.com/?players_url=https://corsproxy.io/?https%3A%2F%2Fpastebin.com%2Fraw%2FTNfcHCVUA2&overwrite_players=true
-
-**Important:** Be mindful of the security and privacy implications when using a third-party CORS proxy. Ensure that the
-proxy is reliable and does not log or misuse the data passing through it.
+```
+├── index.html          # Main HTML
+├── index.js            # UI logic and DOM interactions
+├── logic.js            # Pure business logic (testable)
+├── logic.test.js       # Unit tests (Jest)
+├── index.css           # Styles
+├── sw.js               # Service worker (generated by Workbox)
+├── manifest.json       # PWA manifest
+├── workbox-config.js   # Workbox configuration
+├── assets/             # Images (tennis ball, background)
+├── css/                # Bootstrap CSS
+└── js/                 # Bootstrap JS, Matter.js
+```
