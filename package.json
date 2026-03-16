@@ -1,0 +1,23 @@
+{
+  "name": "tennis-match-manager",
+  "version": "1.0.0",
+  "description": "Tennis Match Manager is a web application designed to help you organize and manage tennis matches efficiently.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/walkowl/tennis-match-manager.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/walkowl/tennis-match-manager/issues"
+  },
+  "homepage": "https://github.com/walkowl/tennis-match-manager#readme",
+  "devDependencies": {
+    "jest": "^30.3.0"
+  }
+}

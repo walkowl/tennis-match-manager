@@ -1,8 +1,6 @@
 let createMatchesButton = document.getElementById('create-matches');
-let isTimerActive = false;
-let countdownInterval = null;
 let playerMatchCounts = {};
-let playerPairings = {};
+let playerTeammatePairings = {};
 
 document.addEventListener('DOMContentLoaded', () => {
     getPlayerList().then(players => {
@@ -23,60 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializePlayerTracking(players) {
-    console.log("Initializing player tracking...");
-    players.forEach(player => {
-        playerMatchCounts[player] = 0;
-        playerPairings[player] = {};
-    });
+    Logic.initializePlayerTracking(players, playerMatchCounts, playerTeammatePairings);
 }
 
 function updateMatchTracking(matches) {
-    matches.forEach(match => {
-        match.teamOne.forEach(player => {
-            playerMatchCounts[player] = (playerMatchCounts[player] || 0) + 1;
-            match.teamOne.forEach(teammate => {
-                if (player !== teammate) {
-                    playerPairings[player][teammate] = (playerPairings[player][teammate] || 0) + 1;
-                }
-            });
-            match.teamTwo.forEach(opponent => {
-                playerPairings[player][opponent] = (playerPairings[player][opponent] || 0) + 1;
-            });
-        });
-        match.teamTwo.forEach(player => {
-            playerMatchCounts[player] = (playerMatchCounts[player] || 0) + 1;
-            match.teamTwo.forEach(teammate => {
-                if (player !== teammate) {
-                    playerPairings[player][teammate] = (playerPairings[player][teammate] || 0) + 1;
-                }
-            });
-            match.teamOne.forEach(opponent => {
-                playerPairings[player][opponent] = (playerPairings[player][opponent] || 0) + 1;
-            });
-        });
-    });
-    console.log("Player Match Counts:", playerMatchCounts);
-    console.log("Player Pairings:", playerPairings);
-}
-
-function startCountdown(duration) {
-    let timeRemaining = duration;
-    createMatchesButton.disabled = true; // Disable the button
-    createMatchesButton.textContent = `Create matches (${timeRemaining}s)`;
-    countdownInterval = setInterval(() => {
-        timeRemaining--;
-        createMatchesButton.textContent = `Create matches (${timeRemaining}s)`;
-        if (timeRemaining <= 0) {
-            clearInterval(countdownInterval);
-            createMatchesButton.textContent = 'Create matches';
-            createMatchesButton.disabled = false; // Re-enable the button
-            isTimerActive = false;
-        }
-    }, 1000);
+    Logic.updateMatchTracking(matches, playerMatchCounts, playerTeammatePairings);
+    saveMatchTracking();
 }
 
 createMatchesButton.addEventListener('click', () => {
-    if (isTimerActive) return; // Exit if the timer is active
     const inactivePlayers = Array.from(document.querySelectorAll('#selected-players div'))
         .filter(player => player.classList.contains('inactive') || player.classList.contains('sitout-2') || player.classList.contains('sitout-1'))
         .map(player => player.textContent);
@@ -85,11 +38,8 @@ createMatchesButton.addEventListener('click', () => {
         const inactivePlayersModal = new bootstrap.Modal(document.getElementById('inactivePlayersModal'));
         inactivePlayersModal.show();
     } else {
-        proceedWithMatchCreation(); // Proceed directly if no inactive players
+        proceedWithMatchCreation();
     }
-    // // Start the countdown timer
-    // isTimerActive = true;
-    // startCountdown(20); // 20 seconds countdown
 });
 
 document.getElementById('confirmInactivePlayers').addEventListener('click', () => {
@@ -113,43 +63,13 @@ function proceedWithMatchCreation() {
         }
         return true;
     }).map(player => player.textContent);
-    // Initialize player tracking data if not present
-    activePlayers.forEach(player => {
-        if (!(player in playerMatchCounts)) {
-            playerMatchCounts[player] = 0;
-        }
-        if (!(player in playerPairings)) {
-            playerPairings[player] = {};
-        }
-    });
+    // Initialize new mid-session players with average match count for fairness
+    Logic.initializeNewPlayers(activePlayers, playerMatchCounts, playerTeammatePairings);
     // Shuffle players to introduce randomness
-    shuffleArray(activePlayers);
-    const sortedPlayers = sortPlayersByMatchCounts(activePlayers);
+    Logic.shuffleArray(activePlayers);
     const matchesList = document.getElementById('matches-list');
     matchesList.innerHTML = '';
-    const matches = [];
-    let restingPlayers = [];
-    for (let i = 0; i < sortedPlayers.length; i += 4) {
-        if (i + 3 < sortedPlayers.length) {
-            let teamOne = [sortedPlayers[i], sortedPlayers[i + 1]];
-            let teamTwo = [sortedPlayers[i + 2], sortedPlayers[i + 3]];
-            // Check for existing pairings and swap if necessary
-            if (playerPairings[teamOne[0]][teamOne[1]] || playerPairings[teamTwo[0]][teamTwo[1]]) {
-                // Try swapping players to avoid repeats
-                [teamOne[1], teamTwo[0]] = [teamTwo[0], teamOne[1]];
-                if (playerPairings[teamOne[0]][teamOne[1]] || playerPairings[teamTwo[0]][teamTwo[1]]) {
-                    // If still problematic, try another swap
-                    [teamOne[1], teamTwo[1]] = [teamTwo[1], teamOne[1]];
-                }
-            }
-            matches.push({ court: Math.floor(i / 4) + 1, teamOne, teamTwo });
-        } else {
-            restingPlayers = sortedPlayers.slice(i);
-            break;
-        }
-    }
-    console.log("Created Matches:", matches);
-    console.log("Resting Players:", restingPlayers);
+    const { matches, restingPlayers } = Logic.generateMatches(activePlayers, playerMatchCounts, playerTeammatePairings);
     updateMatchTracking(matches);
     const dataToSave = { matches: matches, resting: restingPlayers };
     localStorage.setItem('matchesData', JSON.stringify(dataToSave));
@@ -157,20 +77,25 @@ function proceedWithMatchCreation() {
     createBouncingBalls();
 }
 
-function sortPlayersByMatchCounts(players) {
-    return players.sort((a, b) => {
-        return playerMatchCounts[a] - playerMatchCounts[b];
-    });
-}
 
 function saveMatchTracking() {
-    localStorage.setItem('playerMatchCounts', JSON.stringify(playerMatchCounts));
-    localStorage.setItem('playerPairings', JSON.stringify(playerPairings));
+    try {
+        localStorage.setItem('playerMatchCounts', JSON.stringify(playerMatchCounts));
+        localStorage.setItem('playerTeammatePairings', JSON.stringify(playerTeammatePairings));
+    } catch (error) {
+        console.error('Failed to save tracking data:', error);
+    }
 }
 
 function loadMatchTracking() {
-    playerMatchCounts = JSON.parse(localStorage.getItem('playerMatchCounts')) || {};
-    playerPairings = JSON.parse(localStorage.getItem('playerPairings')) || {};
+    try {
+        playerMatchCounts = JSON.parse(localStorage.getItem('playerMatchCounts')) || {};
+        playerTeammatePairings = JSON.parse(localStorage.getItem('playerTeammatePairings')) || {};
+    } catch (error) {
+        console.error('Failed to load tracking data:', error);
+        playerMatchCounts = {};
+        playerTeammatePairings = {};
+    }
 }
 
 
@@ -192,13 +117,14 @@ document.getElementById('confirmNewSession').addEventListener('click', () => {
     localStorage.removeItem('selectedPlayers');
     localStorage.removeItem('matchesData');
     localStorage.removeItem('playerMatchCounts');
-    localStorage.removeItem('playerPairings');
-
-    initializePlayerTracking(players);
+    localStorage.removeItem('playerTeammatePairings');
 
     // Clear match tracking data
     playerMatchCounts = {};
-    playerPairings = {};
+    playerTeammatePairings = {};
+
+    const storedPlayers = getPlayerFromStorage() || [];
+    initializePlayerTracking(storedPlayers);
 
     // Optionally, clear the player names display if you have a separate list for that
     document.getElementById('selected-players').innerHTML = '';
@@ -246,24 +172,32 @@ function updatePlayerCount() {
 }
 
 function addSelectedPlayers() {
-    const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers'));
-    if (savedSelectedPlayers && savedSelectedPlayers.length > 0) {
-        const playerNamesContainer = document.getElementById('selected-players');
-        playerNamesContainer.innerHTML = ''; // Clear the container before adding updated items
-        savedSelectedPlayers.sort((a, b) => a.playerName.localeCompare(b.playerName));
-        savedSelectedPlayers.forEach(player => {
-            displayPlayerName(player, playerNamesContainer);
-        });
+    try {
+        const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers'));
+        if (savedSelectedPlayers && savedSelectedPlayers.length > 0) {
+            const playerNamesContainer = document.getElementById('selected-players');
+            playerNamesContainer.innerHTML = '';
+            savedSelectedPlayers.sort((a, b) => a.playerName.localeCompare(b.playerName));
+            savedSelectedPlayers.forEach(player => {
+                displayPlayerName(player, playerNamesContainer);
+            });
+        }
+    } catch (error) {
+        console.error('Failed to load selected players:', error);
     }
 }
 
-
 function getPlayerFromStorage() {
-    let players = JSON.parse(localStorage.getItem('players'));
-    if (players) {
-        players.sort((a, b) => a.localeCompare(b));
+    try {
+        let players = JSON.parse(localStorage.getItem('players'));
+        if (players) {
+            players.sort((a, b) => a.localeCompare(b));
+        }
+        return players;
+    } catch (error) {
+        console.error('Failed to load players from storage:', error);
+        return null;
     }
-    return players;
 }
 
 function savePlayersInStorage(players) {
@@ -271,9 +205,6 @@ function savePlayersInStorage(players) {
     localStorage.setItem('players', JSON.stringify(players));
 }
 
-function compareArrays(array1, array2) {
-    return JSON.stringify(array1) === JSON.stringify(array2)
-}
 
 function getPlayerList() {
     let defaultPlayers = ["Example player 1", "Example player 2", "Example player 3"];
@@ -282,7 +213,7 @@ function getPlayerList() {
     const listUrl = urlParams.get('players_url');
     // Attempt to get players from storage
     let players = getPlayerFromStorage();
-    const overwritePlayers = urlParams.get('overwrite_players') === 'true' || compareArrays(players, defaultPlayers) === true || players === null;
+    const overwritePlayers = urlParams.get('overwrite_players') === 'true' || Logic.compareArrays(players, defaultPlayers) === true || players === null;
     // If players exist and we're not overwriting, return them
     if (players && players.length > 0 && !overwritePlayers) {
         return Promise.resolve(players);
@@ -294,12 +225,11 @@ function getPlayerList() {
             .then(response => response.text())
             .then(text => {
                 // Split the text by new lines to get an array of player names
-                let fetchedPlayers = text.split('\n').map(player => player.trim()).filter(player => player);
+                let fetchedPlayers = Logic.parsePlayerList(text);
                 // Save the fetched players in storage if we're overwriting or no players were previously stored
                 if (overwritePlayers || !players) {
                     savePlayersInStorage(fetchedPlayers);
                 }
-                console.log(fetchedPlayers.length + ' players fetched added! Enjoy!');
                 return fetchedPlayers;
             })
             .catch(error => {
@@ -444,11 +374,22 @@ function openEditPlayerModal(playerName, index) {
 function savePlayer() {
     const playerName = document.getElementById('player-name-input').value.trim();
     const editingIndex = document.getElementById('editing-player-index').value;
+    if (!playerName) {
+        alert('Player name cannot be empty.');
+        return;
+    }
     let players = getPlayerFromStorage();
-    if (editingIndex) {
-        players[editingIndex] = playerName; // Edit existing player
-    } else if (playerName) {
-        players.push(playerName); // Add new player
+    const isDuplicate = players.some((p, i) =>
+        p.toLowerCase() === playerName.toLowerCase() && String(i) !== editingIndex
+    );
+    if (isDuplicate) {
+        alert('A player with this name already exists.');
+        return;
+    }
+    if (editingIndex !== '') {
+        players[editingIndex] = playerName;
+    } else {
+        players.push(playerName);
     }
     savePlayersInStorage(players);
     displayPlayers(players);
@@ -500,36 +441,40 @@ function createMatchElement(matchData) {
 }
 
 function formatPlayerName(playerName) {
-    let names = playerName.split(' '); // Split the name into an array of [first_name, surname]
-    if (names.length > 1) {
-        let firstName = names[0].toUpperCase(); // Convert the first name to uppercase
-        let surname = names.slice(1).join(' '); // Handle cases where there might be a middle name or multiple surnames
-        return `${firstName} ${surname}`; // Combine and return the formatted name
-    } else {
-        // In case the playerName doesn't have a surname, just convert the entire name to uppercase
-        return playerName.toUpperCase();
-    }
+    return Logic.formatPlayerName(playerName);
 }
 
 function displayPlayerName(player, container) {
-    const playerElement = document.createElement('div'); // Or 'li' if you're using a list
+    const playerElement = document.createElement('div');
     playerElement.textContent = player.playerName;
     playerElement.classList.add('selected-player');
     if (player.inactive) {
         playerElement.classList.add('inactive');
+    } else if (player.sitout === 2) {
+        playerElement.classList.add('sitout-2');
+    } else if (player.sitout === 1) {
+        playerElement.classList.add('sitout-1');
     }
     container.appendChild(playerElement);
 }
 
 function markSelectedPredefinedPlayers() {
-    const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers'));
-    if (savedSelectedPlayers && savedSelectedPlayers.length > 0) {
-        savedSelectedPlayers.forEach(player => {
-            const playerElement = Array.from(document.querySelectorAll('.predefined-player .player-name')).find(element => element.textContent === player.playerName);
-            if (playerElement) {
-                playerElement.parentElement.classList.add('selected');
-            }
-        });
+    try {
+        const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers'));
+        if (savedSelectedPlayers && savedSelectedPlayers.length > 0) {
+            const playerElements = new Map(
+                Array.from(document.querySelectorAll('.predefined-player .player-name'))
+                    .map(el => [el.textContent, el.parentElement])
+            );
+            savedSelectedPlayers.forEach(player => {
+                const element = playerElements.get(player.playerName);
+                if (element) {
+                    element.classList.add('selected');
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Failed to load selected players:', error);
     }
 }
 
@@ -556,13 +501,6 @@ function saveSelectedPredefinedPlayers() {
     updatePlayerCount();
 }
 
-// Function to shuffle an array (Fisher-Yates Shuffle)
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
-    }
-}
 
 let ballsRunning = false;
 
@@ -635,7 +573,7 @@ document.getElementById('clear-tracking').addEventListener('click', () => {
 document.getElementById('confirmClearTracking').addEventListener('click', () => {
     // Clear fairness tracking data
     playerMatchCounts = {};
-    playerPairings = {};
+    playerTeammatePairings = {};
     // Update local storage
     saveMatchTracking();
     // Close the modal after clearing
