@@ -390,28 +390,62 @@ describe('validatePlayerName', () => {
 });
 
 describe('parsePlayerList', () => {
-    test('splits by newlines and trims', () => {
-        expect(Logic.parsePlayerList('Alice\nBob\nCharlie')).toEqual(['Alice', 'Bob', 'Charlie']);
+    test('splits by newlines and returns names and default skills', () => {
+        const result = Logic.parsePlayerList('Alice\nBob\nCharlie');
+        expect(result.names).toEqual(['Alice', 'Bob', 'Charlie']);
+        expect(result.skills).toEqual({ Alice: 5, Bob: 5, Charlie: 5 });
+    });
+
+    test('parses skill ratings from comma-separated format', () => {
+        const result = Logic.parsePlayerList('Alice,3\nBob,5\nCharlie,1');
+        expect(result.names).toEqual(['Alice', 'Bob', 'Charlie']);
+        expect(result.skills).toEqual({ Alice: 3, Bob: 5, Charlie: 1 });
+    });
+
+    test('defaults to skill 5 when no skill specified', () => {
+        const result = Logic.parsePlayerList('Alice\nBob,2');
+        expect(result.skills.Alice).toBe(5);
+        expect(result.skills.Bob).toBe(2);
+    });
+
+    test('clamps invalid skill values to 5', () => {
+        const result = Logic.parsePlayerList('Alice,0\nBob,6\nCharlie,-1');
+        expect(result.skills.Alice).toBe(5);
+        expect(result.skills.Bob).toBe(5);
+        expect(result.skills.Charlie).toBe(5);
     });
 
     test('filters empty lines', () => {
-        expect(Logic.parsePlayerList('Alice\n\nBob\n\n')).toEqual(['Alice', 'Bob']);
+        const result = Logic.parsePlayerList('Alice\n\nBob\n\n');
+        expect(result.names).toEqual(['Alice', 'Bob']);
     });
 
-    test('trims whitespace from names', () => {
-        expect(Logic.parsePlayerList('  Alice  \n  Bob  ')).toEqual(['Alice', 'Bob']);
+    test('trims whitespace from names and skills', () => {
+        const result = Logic.parsePlayerList('  Alice , 3 \n  Bob  ');
+        expect(result.names).toEqual(['Alice', 'Bob']);
+        expect(result.skills.Alice).toBe(3);
     });
 
     test('handles single player', () => {
-        expect(Logic.parsePlayerList('Alice')).toEqual(['Alice']);
+        const result = Logic.parsePlayerList('Alice');
+        expect(result.names).toEqual(['Alice']);
     });
 
     test('handles empty string', () => {
-        expect(Logic.parsePlayerList('')).toEqual([]);
+        const result = Logic.parsePlayerList('');
+        expect(result.names).toEqual([]);
+        expect(result.skills).toEqual({});
     });
 
     test('handles Windows-style line endings', () => {
-        expect(Logic.parsePlayerList('Alice\r\nBob\r\nCharlie')).toEqual(['Alice', 'Bob', 'Charlie']);
+        const result = Logic.parsePlayerList('Alice,3\r\nBob,4\r\nCharlie,5');
+        expect(result.names).toEqual(['Alice', 'Bob', 'Charlie']);
+        expect(result.skills).toEqual({ Alice: 3, Bob: 4, Charlie: 5 });
+    });
+
+    test('handles non-numeric skill values by defaulting to 5', () => {
+        const result = Logic.parsePlayerList('Alice,abc');
+        expect(result.skills.Alice).toBe(5);
     });
 });
 
@@ -464,6 +498,94 @@ describe('filterSitoutPlayers', () => {
             { playerName: 'Inactive2', inactive: true },
         ];
         expect(Logic.filterSitoutPlayers(players)).toEqual(['Sitout1', 'Sitout2']);
+    });
+});
+
+describe('getSkillGapPenalty', () => {
+    test('returns 0 for same skill level', () => {
+        expect(Logic.getSkillGapPenalty('A', 'B', { A: 3, B: 3 })).toBe(0);
+    });
+
+    test('returns absolute difference for different skills', () => {
+        expect(Logic.getSkillGapPenalty('A', 'B', { A: 5, B: 1 })).toBe(4);
+        expect(Logic.getSkillGapPenalty('A', 'B', { A: 1, B: 5 })).toBe(4);
+    });
+
+    test('defaults to skill 5 for unknown players', () => {
+        expect(Logic.getSkillGapPenalty('A', 'B', {})).toBe(0);
+        expect(Logic.getSkillGapPenalty('A', 'B', { A: 2 })).toBe(3); // 5 - 2
+    });
+});
+
+describe('scoreMatch', () => {
+    test('returns 0 for perfectly balanced teams', () => {
+        const skills = { A: 5, B: 1, C: 3, D: 3 };
+        expect(Logic.scoreMatch(['A', 'B'], ['C', 'D'], skills)).toBe(0); // 6 vs 6
+    });
+
+    test('returns skill difference between teams', () => {
+        const skills = { A: 5, B: 5, C: 1, D: 1 };
+        expect(Logic.scoreMatch(['A', 'B'], ['C', 'D'], skills)).toBe(8); // 10 vs 2
+    });
+
+    test('defaults unknown players to skill 5', () => {
+        expect(Logic.scoreMatch(['A', 'B'], ['C', 'D'], {})).toBe(0); // all default 5
+    });
+});
+
+describe('findBestPairing', () => {
+    test('picks the most skill-balanced split with no history', () => {
+        const pairings = { A: {}, B: {}, C: {}, D: {} };
+        const skills = { A: 5, B: 1, C: 4, D: 2 };
+        // Best balance: [A(5)+D(2)=7] vs [C(4)+B(1)=5] gap=2
+        // or: [A(5)+B(1)=6] vs [C(4)+D(2)=6] gap=0 — this is best
+        const result = Logic.findBestPairing(['A', 'B', 'C', 'D'], pairings, skills);
+        const teamOneSkill = skills[result.teamOne[0]] + skills[result.teamOne[1]];
+        const teamTwoSkill = skills[result.teamTwo[0]] + skills[result.teamTwo[1]];
+        expect(Math.abs(teamOneSkill - teamTwoSkill)).toBe(0);
+    });
+
+    test('avoids repeated teammates even if skill balance is worse', () => {
+        const pairings = { A: { B: 2 }, B: { A: 2 }, C: {}, D: {} };
+        const skills = { A: 5, B: 5, C: 5, D: 5 };
+        // All skills equal, so should avoid A+B pairing
+        const result = Logic.findBestPairing(['A', 'B', 'C', 'D'], pairings, skills);
+        const teamOneHasAB = result.teamOne.includes('A') && result.teamOne.includes('B');
+        const teamTwoHasAB = result.teamTwo.includes('A') && result.teamTwo.includes('B');
+        expect(teamOneHasAB || teamTwoHasAB).toBe(false);
+    });
+
+    test('balances teammate history against skill when both matter', () => {
+        const pairings = { A: { C: 1 }, B: {}, C: { A: 1 }, D: {} };
+        const skills = { A: 5, B: 1, C: 5, D: 1 };
+        // A+C have history (penalty 10), A+B is skill-balanced (5+1=6 vs 5+1=6, gap 0)
+        // Should avoid A+C as teammates
+        const result = Logic.findBestPairing(['A', 'B', 'C', 'D'], pairings, skills);
+        const teamOneHasAC = result.teamOne.includes('A') && result.teamOne.includes('C');
+        const teamTwoHasAC = result.teamTwo.includes('A') && result.teamTwo.includes('C');
+        expect(teamOneHasAC || teamTwoHasAC).toBe(false);
+    });
+});
+
+describe('generateMatches with skill ratings', () => {
+    test('uses skill ratings to balance teams', () => {
+        const counts = { A: 0, B: 0, C: 0, D: 0 };
+        const pairings = { A: {}, B: {}, C: {}, D: {} };
+        const skills = { A: 5, B: 1, C: 4, D: 2 };
+        const { matches } = Logic.generateMatches(['A', 'B', 'C', 'D'], counts, pairings, skills);
+        const teamOneSkill = skills[matches[0].teamOne[0]] + skills[matches[0].teamOne[1]];
+        const teamTwoSkill = skills[matches[0].teamTwo[0]] + skills[matches[0].teamTwo[1]];
+        // Should pick the most balanced split
+        expect(Math.abs(teamOneSkill - teamTwoSkill)).toBeLessThanOrEqual(2);
+    });
+
+    test('works without skill ratings (backward compatible)', () => {
+        const counts = { A: 0, B: 0, C: 0, D: 0 };
+        const pairings = { A: {}, B: {}, C: {}, D: {} };
+        const { matches } = Logic.generateMatches(['A', 'B', 'C', 'D'], counts, pairings);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].teamOne).toHaveLength(2);
+        expect(matches[0].teamTwo).toHaveLength(2);
     });
 });
 

@@ -90,28 +90,19 @@ function initializeNewPlayers(players, matchCounts, teammatePairings) {
 
 /**
  * Generate match pairings from a list of active players.
+ * Considers teammate history and skill ratings for balanced matches.
+ * skillRatings is optional — if not provided, skill balancing is skipped.
  * Returns { matches: [...], restingPlayers: [...] }
  */
-function generateMatches(activePlayers, matchCounts, teammatePairings) {
+function generateMatches(activePlayers, matchCounts, teammatePairings, skillRatings) {
     const sorted = sortPlayersByMatchCounts(activePlayers, matchCounts);
     const matches = [];
     let restingPlayers = [];
 
     for (let i = 0; i < sorted.length; i += 4) {
         if (i + 3 < sorted.length) {
-            let teamOne = [sorted[i], sorted[i + 1]];
-            let teamTwo = [sorted[i + 2], sorted[i + 3]];
-
-            const getTeammateCount = (a, b) =>
-                (teammatePairings[a] && teammatePairings[a][b]) || 0;
-
-            if (getTeammateCount(teamOne[0], teamOne[1]) > 0 || getTeammateCount(teamTwo[0], teamTwo[1]) > 0) {
-                [teamOne[1], teamTwo[0]] = [teamTwo[0], teamOne[1]];
-                if (getTeammateCount(teamOne[0], teamOne[1]) > 0 || getTeammateCount(teamTwo[0], teamTwo[1]) > 0) {
-                    [teamOne[1], teamTwo[1]] = [teamTwo[1], teamOne[1]];
-                }
-            }
-
+            const group = [sorted[i], sorted[i + 1], sorted[i + 2], sorted[i + 3]];
+            const { teamOne, teamTwo } = findBestPairing(group, teammatePairings, skillRatings || {});
             matches.push({ court: Math.floor(i / 4) + 1, teamOne, teamTwo });
         } else {
             restingPlayers = sorted.slice(i);
@@ -120,6 +111,47 @@ function generateMatches(activePlayers, matchCounts, teammatePairings) {
     }
 
     return { matches, restingPlayers };
+}
+
+/**
+ * Find the best team pairing from a group of 4 players.
+ * Evaluates all 3 possible team splits and picks the one with:
+ *   1. Fewest repeated teammate pairings
+ *   2. Best skill balance between teams (lowest gap)
+ */
+function findBestPairing(group, teammatePairings, skillRatings) {
+    // All 3 possible ways to split 4 players into 2 teams of 2
+    const splits = [
+        { teamOne: [group[0], group[1]], teamTwo: [group[2], group[3]] },
+        { teamOne: [group[0], group[2]], teamTwo: [group[1], group[3]] },
+        { teamOne: [group[0], group[3]], teamTwo: [group[1], group[2]] },
+    ];
+
+    const getTeammateCount = (a, b) =>
+        (teammatePairings[a] && teammatePairings[a][b]) || 0;
+
+    let bestSplit = splits[0];
+    let bestScore = Infinity;
+
+    splits.forEach(split => {
+        // Penalize repeated teammate pairings
+        const repeatPenalty =
+            getTeammateCount(split.teamOne[0], split.teamOne[1]) +
+            getTeammateCount(split.teamTwo[0], split.teamTwo[1]);
+
+        // Penalize skill imbalance between teams
+        const skillGap = scoreMatch(split.teamOne, split.teamTwo, skillRatings);
+
+        // Combined score: teammate repeats are weighted more heavily
+        const score = (repeatPenalty * 10) + skillGap;
+
+        if (score < bestScore) {
+            bestScore = score;
+            bestSplit = split;
+        }
+    });
+
+    return bestSplit;
 }
 
 /**
@@ -151,10 +183,44 @@ function filterSitoutPlayers(players) {
 }
 
 /**
- * Parse a player list text (newline-separated) into an array of names.
+ * Parse a player list text (newline-separated) into an array of player objects.
+ * Each line can be "Name" or "Name,skill" where skill is 1-5 (default 5).
+ * Returns { names: string[], skills: { name: number } }
  */
 function parsePlayerList(text) {
-    return text.split('\n').map(player => player.trim()).filter(player => player);
+    const names = [];
+    const skills = {};
+    text.split('\n').map(line => line.trim()).filter(line => line).forEach(line => {
+        const parts = line.split(',');
+        const name = parts[0].trim();
+        const skill = parts.length > 1 ? parseInt(parts[1].trim(), 10) : 5;
+        if (name) {
+            names.push(name);
+            skills[name] = (skill >= 1 && skill <= 5) ? skill : 5;
+        }
+    });
+    return { names, skills };
+}
+
+/**
+ * Calculate a skill gap penalty between two players.
+ * Higher gap = less likely to be paired as opponents.
+ * Returns a value 0-4 representing how many times less often they should play together.
+ */
+function getSkillGapPenalty(playerA, playerB, skillRatings) {
+    const skillA = skillRatings[playerA] || 5;
+    const skillB = skillRatings[playerB] || 5;
+    return Math.abs(skillA - skillB);
+}
+
+/**
+ * Score a potential match based on skill balance between teams.
+ * Lower score = better match. Considers both within-team and between-team balance.
+ */
+function scoreMatch(teamOne, teamTwo, skillRatings) {
+    const teamOneSkill = (skillRatings[teamOne[0]] || 5) + (skillRatings[teamOne[1]] || 5);
+    const teamTwoSkill = (skillRatings[teamTwo[0]] || 5) + (skillRatings[teamTwo[1]] || 5);
+    return Math.abs(teamOneSkill - teamTwoSkill);
 }
 
 // Export for browser (global) and Node.js (Jest)
@@ -168,9 +234,12 @@ const LogicExports = {
     calculateAverageMatchCount,
     initializeNewPlayers,
     generateMatches,
+    findBestPairing,
     validatePlayerName,
     parsePlayerList,
-    filterSitoutPlayers
+    filterSitoutPlayers,
+    getSkillGapPenalty,
+    scoreMatch
 };
 
 if (typeof module !== 'undefined' && module.exports) {

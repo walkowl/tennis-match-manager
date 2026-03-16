@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 09:49';
+const APP_VERSION_DATE = '2026-03-17 10:06';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
@@ -70,7 +70,8 @@ function proceedWithMatchCreation() {
     Logic.shuffleArray(activePlayers);
     const matchesList = document.getElementById('matches-list');
     matchesList.innerHTML = '';
-    const { matches, restingPlayers } = Logic.generateMatches(activePlayers, playerMatchCounts, playerTeammatePairings);
+    const skillRatings = getSkillRatings();
+    const { matches, restingPlayers } = Logic.generateMatches(activePlayers, playerMatchCounts, playerTeammatePairings, skillRatings);
     updateMatchTracking(matches);
     const dataToSave = { matches: matches, resting: restingPlayers };
     localStorage.setItem('matchesData', JSON.stringify(dataToSave));
@@ -206,6 +207,23 @@ function savePlayersInStorage(players) {
     localStorage.setItem('players', JSON.stringify(players));
 }
 
+function saveSkillRatings(skills) {
+    try {
+        localStorage.setItem('skillRatings', JSON.stringify(skills));
+    } catch (error) {
+        console.error('Failed to save skill ratings:', error);
+    }
+}
+
+function getSkillRatings() {
+    try {
+        return JSON.parse(localStorage.getItem('skillRatings')) || {};
+    } catch (error) {
+        console.error('Failed to load skill ratings:', error);
+        return {};
+    }
+}
+
 
 function getPlayerList() {
     let defaultPlayers = ["Example player 1", "Example player 2", "Example player 3"];
@@ -225,13 +243,12 @@ function getPlayerList() {
         return fetch(listUrl)
             .then(response => response.text())
             .then(text => {
-                // Split the text by new lines to get an array of player names
-                let fetchedPlayers = Logic.parsePlayerList(text);
-                // Save the fetched players in storage if we're overwriting or no players were previously stored
+                const parsed = Logic.parsePlayerList(text);
                 if (overwritePlayers || !players) {
-                    savePlayersInStorage(fetchedPlayers);
+                    savePlayersInStorage(parsed.names);
+                    saveSkillRatings(parsed.skills);
                 }
-                return fetchedPlayers;
+                return parsed.names;
             })
             .catch(error => {
                 console.error('Failed to fetch player list:', error);
