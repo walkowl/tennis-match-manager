@@ -88,70 +88,174 @@ function initializeNewPlayers(players, matchCounts, teammatePairings) {
     });
 }
 
+// Scoring weights for the matchmaking algorithm
+const SCORING_WEIGHTS = {
+    SKILL_GAP: 100,        // Team skill balance (quadratic) — most important
+    TEAMMATE_REPEAT: 50,   // Avoid same teammates — very important
+    TEAMMATE_SKILL_GAP: 10 // Similar-skill teammates — nice to have
+};
+
 /**
- * Generate match pairings from a list of active players.
- * Considers teammate history and skill ratings for balanced matches.
- * skillRatings is optional — if not provided, skill balancing is skipped.
- * Returns { matches: [...], restingPlayers: [...] }
+ * Score a single court assignment (lower = better).
+ * Considers: team balance, teammate variety, and teammate skill similarity.
  */
-function generateMatches(activePlayers, matchCounts, teammatePairings, skillRatings) {
-    const sorted = sortPlayersByMatchCounts(activePlayers, matchCounts);
-    const matches = [];
-    let restingPlayers = [];
+function scoreCourtAssignment(teamOne, teamTwo, teammatePairings, skillRatings) {
+    const getTeammateCount = (a, b) =>
+        (teammatePairings[a] && teammatePairings[a][b]) || 0;
+    const getSkill = (p) => skillRatings[p] || 3;
 
-    for (let i = 0; i < sorted.length; i += 4) {
-        if (i + 3 < sorted.length) {
-            const group = [sorted[i], sorted[i + 1], sorted[i + 2], sorted[i + 3]];
-            const { teamOne, teamTwo } = findBestPairing(group, teammatePairings, skillRatings || {});
-            matches.push({ court: Math.floor(i / 4) + 1, teamOne, teamTwo });
-        } else {
-            restingPlayers = sorted.slice(i);
-            break;
-        }
-    }
+    // 1. Skill gap between teams (quadratic to heavily penalize big gaps)
+    const teamOneSkill = getSkill(teamOne[0]) + getSkill(teamOne[1]);
+    const teamTwoSkill = getSkill(teamTwo[0]) + getSkill(teamTwo[1]);
+    const skillGap = Math.abs(teamOneSkill - teamTwoSkill);
+    const skillGapScore = skillGap * skillGap * SCORING_WEIGHTS.SKILL_GAP;
 
-    return { matches, restingPlayers };
+    // 2. Repeated teammate penalty
+    const repeatScore = (
+        getTeammateCount(teamOne[0], teamOne[1]) +
+        getTeammateCount(teamTwo[0], teamTwo[1])
+    ) * SCORING_WEIGHTS.TEAMMATE_REPEAT;
+
+    // 3. Teammate skill similarity (prefer similar-skill teammates)
+    const teammateSkillGapScore = (
+        Math.abs(getSkill(teamOne[0]) - getSkill(teamOne[1])) +
+        Math.abs(getSkill(teamTwo[0]) - getSkill(teamTwo[1]))
+    ) * SCORING_WEIGHTS.TEAMMATE_SKILL_GAP;
+
+    return skillGapScore + repeatScore + teammateSkillGapScore;
 }
 
 /**
- * Find the best team pairing from a group of 4 players.
- * Evaluates all 3 possible team splits and picks the one with:
- *   1. Best skill balance between teams (primary)
- *   2. Fewest repeated teammate pairings (tiebreaker)
+ * Score an entire assignment of all courts (lower = better).
  */
-function findBestPairing(group, teammatePairings, skillRatings) {
-    // All 3 possible ways to split 4 players into 2 teams of 2
+function scoreTotalAssignment(courts, teammatePairings, skillRatings) {
+    return courts.reduce((total, court) =>
+        total + scoreCourtAssignment(court.teamOne, court.teamTwo, teammatePairings, skillRatings), 0);
+}
+
+/**
+ * Find the best team split for a group of 4 players.
+ */
+function findBestSplit(group, teammatePairings, skillRatings) {
     const splits = [
         { teamOne: [group[0], group[1]], teamTwo: [group[2], group[3]] },
         { teamOne: [group[0], group[2]], teamTwo: [group[1], group[3]] },
         { teamOne: [group[0], group[3]], teamTwo: [group[1], group[2]] },
     ];
-
-    const getTeammateCount = (a, b) =>
-        (teammatePairings[a] && teammatePairings[a][b]) || 0;
-
     let bestSplit = splits[0];
     let bestScore = Infinity;
-
     splits.forEach(split => {
-        // Penalize skill imbalance between teams (primary factor)
-        const skillGap = scoreMatch(split.teamOne, split.teamTwo, skillRatings);
-
-        // Penalize repeated teammate pairings (secondary factor)
-        const repeatPenalty =
-            getTeammateCount(split.teamOne[0], split.teamOne[1]) +
-            getTeammateCount(split.teamTwo[0], split.teamTwo[1]);
-
-        // Skill balance is prioritized; teammate variety is the tiebreaker
-        const score = (skillGap * 10) + repeatPenalty;
-
+        const score = scoreCourtAssignment(split.teamOne, split.teamTwo, teammatePairings, skillRatings);
         if (score < bestScore) {
             bestScore = score;
             bestSplit = split;
         }
     });
-
     return bestSplit;
+}
+
+/**
+ * Generate match pairings using global optimization.
+ * Uses iterative hill climbing: starts with initial assignment,
+ * then improves by swapping players between courts and re-splitting teams.
+ *
+ * Returns { matches: [...], restingPlayers: [...] }
+ */
+function generateMatches(activePlayers, matchCounts, teammatePairings, skillRatings) {
+    const skills = skillRatings || {};
+    const sorted = sortPlayersByMatchCounts(activePlayers, matchCounts);
+
+    // Players who can't fill a court rest (those with most matches)
+    const numPlaying = Math.floor(sorted.length / 4) * 4;
+    const playing = sorted.slice(0, numPlaying);
+    const restingPlayers = sorted.slice(numPlaying);
+
+    if (playing.length < 4) {
+        return { matches: [], restingPlayers: sorted };
+    }
+
+    // Generate initial assignment: random groups with best splits
+    shuffleArray(playing);
+    let courts = [];
+    for (let i = 0; i < playing.length; i += 4) {
+        const group = playing.slice(i, i + 4);
+        const split = findBestSplit(group, teammatePairings, skills);
+        courts.push(split);
+    }
+
+    // Hill climbing: try to improve by swapping players between courts
+    const MAX_ITERATIONS = 200;
+    let bestScore = scoreTotalAssignment(courts, teammatePairings, skills);
+
+    for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
+        let improved = false;
+
+        // Strategy 1: Try swapping one player between two different courts
+        for (let c1 = 0; c1 < courts.length && !improved; c1++) {
+            for (let c2 = c1 + 1; c2 < courts.length && !improved; c2++) {
+                const players1 = [...courts[c1].teamOne, ...courts[c1].teamTwo];
+                const players2 = [...courts[c2].teamOne, ...courts[c2].teamTwo];
+
+                for (let p1 = 0; p1 < 4 && !improved; p1++) {
+                    for (let p2 = 0; p2 < 4 && !improved; p2++) {
+                        // Swap players between courts
+                        const newPlayers1 = [...players1];
+                        const newPlayers2 = [...players2];
+                        [newPlayers1[p1], newPlayers2[p2]] = [newPlayers2[p2], newPlayers1[p1]];
+
+                        // Find best splits for both new groups
+                        const newSplit1 = findBestSplit(newPlayers1, teammatePairings, skills);
+                        const newSplit2 = findBestSplit(newPlayers2, teammatePairings, skills);
+
+                        // Calculate new total score
+                        const newCourts = courts.map((c, i) => {
+                            if (i === c1) return newSplit1;
+                            if (i === c2) return newSplit2;
+                            return c;
+                        });
+                        const newScore = scoreTotalAssignment(newCourts, teammatePairings, skills);
+
+                        if (newScore < bestScore) {
+                            courts = newCourts;
+                            bestScore = newScore;
+                            improved = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Strategy 2: Re-split teams within each court
+        for (let c = 0; c < courts.length; c++) {
+            const group = [...courts[c].teamOne, ...courts[c].teamTwo];
+            const newSplit = findBestSplit(group, teammatePairings, skills);
+            const newCourts = courts.map((court, i) => i === c ? newSplit : court);
+            const newScore = scoreTotalAssignment(newCourts, teammatePairings, skills);
+            if (newScore < bestScore) {
+                courts = newCourts;
+                bestScore = newScore;
+                improved = true;
+            }
+        }
+
+        if (!improved) break; // No more improvements possible
+    }
+
+    // Convert to match format with court numbers
+    const matches = courts.map((court, i) => ({
+        court: i + 1,
+        teamOne: court.teamOne,
+        teamTwo: court.teamTwo
+    }));
+
+    return { matches, restingPlayers };
+}
+
+/**
+ * Legacy wrapper — kept for backward compatibility with existing tests.
+ */
+function findBestPairing(group, teammatePairings, skillRatings) {
+    return findBestSplit(group, teammatePairings, skillRatings);
 }
 
 /**
@@ -235,11 +339,15 @@ const LogicExports = {
     initializeNewPlayers,
     generateMatches,
     findBestPairing,
+    findBestSplit,
+    scoreCourtAssignment,
+    scoreTotalAssignment,
     validatePlayerName,
     parsePlayerList,
     filterSitoutPlayers,
     getSkillGapPenalty,
-    scoreMatch
+    scoreMatch,
+    SCORING_WEIGHTS
 };
 
 if (typeof module !== 'undefined' && module.exports) {

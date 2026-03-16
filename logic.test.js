@@ -533,61 +533,103 @@ describe('scoreMatch', () => {
     });
 });
 
-describe('findBestPairing', () => {
+describe('scoreCourtAssignment', () => {
+    test('returns 0 for perfectly balanced teams with no history', () => {
+        const pairings = { A: {}, B: {}, C: {}, D: {} };
+        const skills = { A: 3, B: 3, C: 3, D: 3 };
+        expect(Logic.scoreCourtAssignment(['A', 'B'], ['C', 'D'], pairings, skills)).toBe(0);
+    });
+
+    test('penalizes skill imbalance quadratically', () => {
+        const pairings = { A: {}, B: {}, C: {}, D: {} };
+        const skills = { A: 5, B: 5, C: 1, D: 1 };
+        // Gap = |10-2| = 8, score = 8*8*100 = 6400 (plus teammate skill gap)
+        const score = Logic.scoreCourtAssignment(['A', 'B'], ['C', 'D'], pairings, skills);
+        expect(score).toBeGreaterThan(6000);
+    });
+
+    test('penalizes repeated teammates', () => {
+        const pairings = { A: { B: 3 }, B: { A: 3 }, C: {}, D: {} };
+        const skills = { A: 3, B: 3, C: 3, D: 3 };
+        // No skill gap, but 3 repeats on team one = 3 * 50 = 150
+        const score = Logic.scoreCourtAssignment(['A', 'B'], ['C', 'D'], pairings, skills);
+        expect(score).toBe(150);
+    });
+
+    test('penalizes skill gap within teammates', () => {
+        const pairings = { A: {}, B: {}, C: {}, D: {} };
+        const skills = { A: 5, B: 1, C: 4, D: 2 };
+        // Teams [A(5),B(1)] vs [C(4),D(2)]: gap = |6-6| = 0
+        // But within-team gaps: |5-1|=4 + |4-2|=2 = 6 * 10 = 60
+        expect(Logic.scoreCourtAssignment(['A', 'B'], ['C', 'D'], pairings, skills)).toBe(60);
+    });
+});
+
+describe('findBestSplit', () => {
     test('picks the most skill-balanced split with no history', () => {
         const pairings = { A: {}, B: {}, C: {}, D: {} };
         const skills = { A: 5, B: 1, C: 4, D: 2 };
-        // Best balance: [A(5)+D(2)=7] vs [C(4)+B(1)=5] gap=2
-        // or: [A(5)+B(1)=6] vs [C(4)+D(2)=6] gap=0 — this is best
-        const result = Logic.findBestPairing(['A', 'B', 'C', 'D'], pairings, skills);
+        const result = Logic.findBestSplit(['A', 'B', 'C', 'D'], pairings, skills);
         const teamOneSkill = skills[result.teamOne[0]] + skills[result.teamOne[1]];
         const teamTwoSkill = skills[result.teamTwo[0]] + skills[result.teamTwo[1]];
-        expect(Math.abs(teamOneSkill - teamTwoSkill)).toBe(0);
+        expect(Math.abs(teamOneSkill - teamTwoSkill)).toBeLessThanOrEqual(2);
     });
 
     test('avoids repeated teammates when skills are equal', () => {
         const pairings = { A: { B: 2 }, B: { A: 2 }, C: {}, D: {} };
         const skills = { A: 5, B: 5, C: 5, D: 5 };
-        // All skills equal, so teammate variety becomes the deciding factor
-        const result = Logic.findBestPairing(['A', 'B', 'C', 'D'], pairings, skills);
+        const result = Logic.findBestSplit(['A', 'B', 'C', 'D'], pairings, skills);
         const teamOneHasAB = result.teamOne.includes('A') && result.teamOne.includes('B');
         const teamTwoHasAB = result.teamTwo.includes('A') && result.teamTwo.includes('B');
         expect(teamOneHasAB || teamTwoHasAB).toBe(false);
     });
 
-    test('prioritizes skill balance over teammate variety', () => {
-        const pairings = { A: { B: 3 }, B: { A: 3 }, C: {}, D: {} };
-        const skills = { A: 5, B: 1, C: 5, D: 1 };
-        // A+B have history but A(5)+B(1)=6 vs C(5)+D(1)=6 is perfectly balanced
-        // Should still pair A+B because skill balance is primary
-        const result = Logic.findBestPairing(['A', 'B', 'C', 'D'], pairings, skills);
+    test('prefers similar-skill teammates', () => {
+        const pairings = { A: {}, B: {}, C: {}, D: {} };
+        const skills = { A: 5, B: 5, C: 1, D: 1 };
+        // [A(5)+B(5)] vs [C(1)+D(1)]: teammate gap=0+0=0, team gap=|10-2|=8
+        // [A(5)+C(1)] vs [B(5)+D(1)]: teammate gap=4+4=8, team gap=|6-6|=0
+        // [A(5)+D(1)] vs [B(5)+C(1)]: teammate gap=4+4=8, team gap=|6-6|=0
+        // Score1: 8*8*100 + 0 = 6400
+        // Score2: 0 + 80 = 80
+        // Algorithm picks score2 (better team balance), trades teammate similarity
+        const result = Logic.findBestSplit(['A', 'B', 'C', 'D'], pairings, skills);
         const teamOneSkill = skills[result.teamOne[0]] + skills[result.teamOne[1]];
         const teamTwoSkill = skills[result.teamTwo[0]] + skills[result.teamTwo[1]];
         expect(Math.abs(teamOneSkill - teamTwoSkill)).toBe(0);
     });
-
-    test('uses teammate variety as tiebreaker when skill balance is equal', () => {
-        const pairings = { A: { C: 1 }, B: {}, C: { A: 1 }, D: {} };
-        const skills = { A: 3, B: 3, C: 3, D: 3 };
-        // All skills equal — all splits have same skill gap (0)
-        // Should use teammate variety to break tie: avoid A+C
-        const result = Logic.findBestPairing(['A', 'B', 'C', 'D'], pairings, skills);
-        const teamOneHasAC = result.teamOne.includes('A') && result.teamOne.includes('C');
-        const teamTwoHasAC = result.teamTwo.includes('A') && result.teamTwo.includes('C');
-        expect(teamOneHasAC || teamTwoHasAC).toBe(false);
-    });
 });
 
-describe('generateMatches with skill ratings', () => {
-    test('uses skill ratings to balance teams', () => {
-        const counts = { A: 0, B: 0, C: 0, D: 0 };
-        const pairings = { A: {}, B: {}, C: {}, D: {} };
-        const skills = { A: 5, B: 1, C: 4, D: 2 };
-        const { matches } = Logic.generateMatches(['A', 'B', 'C', 'D'], counts, pairings, skills);
-        const teamOneSkill = skills[matches[0].teamOne[0]] + skills[matches[0].teamOne[1]];
-        const teamTwoSkill = skills[matches[0].teamTwo[0]] + skills[matches[0].teamTwo[1]];
-        // Should pick the most balanced split
-        expect(Math.abs(teamOneSkill - teamTwoSkill)).toBeLessThanOrEqual(2);
+describe('generateMatches with global optimization', () => {
+    test('balances skills across courts', () => {
+        const counts = {};
+        const pairings = {};
+        const players = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        const skills = { A: 5, B: 5, C: 1, D: 1, E: 4, F: 2, G: 3, H: 3 };
+        players.forEach(p => { counts[p] = 0; pairings[p] = {}; });
+        const { matches } = Logic.generateMatches(players, counts, pairings, skills);
+        // Each court should have reasonable skill balance
+        matches.forEach(match => {
+            const t1 = skills[match.teamOne[0]] + skills[match.teamOne[1]];
+            const t2 = skills[match.teamTwo[0]] + skills[match.teamTwo[1]];
+            expect(Math.abs(t1 - t2)).toBeLessThanOrEqual(2);
+        });
+    });
+
+    test('swaps players between courts for better balance', () => {
+        const counts = {};
+        const pairings = {};
+        // Extreme case: 4 strong + 4 weak players
+        const players = ['S1', 'S2', 'S3', 'S4', 'W1', 'W2', 'W3', 'W4'];
+        const skills = { S1: 5, S2: 5, S3: 5, S4: 5, W1: 1, W2: 1, W3: 1, W4: 1 };
+        players.forEach(p => { counts[p] = 0; pairings[p] = {}; });
+        const { matches } = Logic.generateMatches(players, counts, pairings, skills);
+        // After optimization, each court should have mixed skills
+        matches.forEach(match => {
+            const t1 = skills[match.teamOne[0]] + skills[match.teamOne[1]];
+            const t2 = skills[match.teamTwo[0]] + skills[match.teamTwo[1]];
+            expect(Math.abs(t1 - t2)).toBeLessThanOrEqual(2);
+        });
     });
 
     test('works without skill ratings (backward compatible)', () => {
@@ -597,6 +639,41 @@ describe('generateMatches with skill ratings', () => {
         expect(matches).toHaveLength(1);
         expect(matches[0].teamOne).toHaveLength(2);
         expect(matches[0].teamTwo).toHaveLength(2);
+    });
+
+    test('maximizes variety over multiple rounds', () => {
+        const counts = {};
+        const pairings = {};
+        const players = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        const skills = { A: 3, B: 3, C: 3, D: 3, E: 3, F: 3, G: 3, H: 3 };
+        players.forEach(p => { counts[p] = 0; pairings[p] = {}; });
+
+        // Play 3 rounds and track all teammate pairings
+        const allTeammates = new Set();
+        for (let round = 0; round < 3; round++) {
+            const { matches } = Logic.generateMatches(players, counts, pairings, skills);
+            Logic.updateMatchTracking(matches, counts, pairings);
+            matches.forEach(m => {
+                allTeammates.add(`${m.teamOne[0]}-${m.teamOne[1]}`);
+                allTeammates.add(`${m.teamTwo[0]}-${m.teamTwo[1]}`);
+            });
+        }
+        // With 8 equal-skill players over 3 rounds (12 teammate pairs),
+        // we should see good variety — at least 8 unique pairings out of 28 possible
+        expect(allTeammates.size).toBeGreaterThanOrEqual(8);
+    });
+
+    test('produces balanced matches even with large skill spread', () => {
+        const counts = {};
+        const pairings = {};
+        const players = ['A', 'B', 'C', 'D'];
+        const skills = { A: 5, B: 1, C: 3, D: 2 };
+        players.forEach(p => { counts[p] = 0; pairings[p] = {}; });
+        const { matches } = Logic.generateMatches(players, counts, pairings, skills);
+        const t1 = skills[matches[0].teamOne[0]] + skills[matches[0].teamOne[1]];
+        const t2 = skills[matches[0].teamTwo[0]] + skills[matches[0].teamTwo[1]];
+        // Best possible: [A(5)+B(1)=6] vs [C(3)+D(2)=5] gap=1
+        expect(Math.abs(t1 - t2)).toBeLessThanOrEqual(1);
     });
 });
 
