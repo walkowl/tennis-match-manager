@@ -316,6 +316,17 @@ function processSitouts(players) {
 }
 
 /**
+ * Check if tracking data should be auto-reset based on inactivity.
+ * Returns true if more than `thresholdMs` milliseconds have passed since the last match.
+ */
+function shouldAutoResetTracking(lastMatchTimestamp, now, thresholdMs) {
+    if (!lastMatchTimestamp) return false;
+    return (now - lastMatchTimestamp) >= thresholdMs;
+}
+
+const AUTO_RESET_THRESHOLD_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+/**
  * Parse a player list text (newline-separated) into an array of player objects.
  * Each line can be "Name" or "Name,skill" where skill is 1-5 (default 5).
  * Returns { names: string[], skills: { name: number } }
@@ -375,6 +386,8 @@ const LogicExports = {
     parsePlayerList,
     filterSitoutPlayers,
     processSitouts,
+    shouldAutoResetTracking,
+    AUTO_RESET_THRESHOLD_MS,
     getSkillGapPenalty,
     scoreMatch,
     SCORING_WEIGHTS

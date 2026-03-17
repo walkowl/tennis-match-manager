@@ -772,6 +772,43 @@ describe('generateMatches with global optimization', () => {
     });
 });
 
+describe('shouldAutoResetTracking', () => {
+    const SIX_HOURS = Logic.AUTO_RESET_THRESHOLD_MS;
+
+    test('returns true when more than 6 hours have passed', () => {
+        const lastMatch = Date.now() - (7 * 60 * 60 * 1000); // 7 hours ago
+        expect(Logic.shouldAutoResetTracking(lastMatch, Date.now(), SIX_HOURS)).toBe(true);
+    });
+
+    test('returns false when less than 6 hours have passed', () => {
+        const lastMatch = Date.now() - (3 * 60 * 60 * 1000); // 3 hours ago
+        expect(Logic.shouldAutoResetTracking(lastMatch, Date.now(), SIX_HOURS)).toBe(false);
+    });
+
+    test('returns true when exactly 6 hours have passed', () => {
+        const lastMatch = Date.now() - SIX_HOURS;
+        expect(Logic.shouldAutoResetTracking(lastMatch, Date.now(), SIX_HOURS)).toBe(true);
+    });
+
+    test('returns false when no timestamp exists', () => {
+        expect(Logic.shouldAutoResetTracking(null, Date.now(), SIX_HOURS)).toBe(false);
+    });
+
+    test('returns false when timestamp is 0', () => {
+        expect(Logic.shouldAutoResetTracking(0, Date.now(), SIX_HOURS)).toBe(false);
+    });
+
+    test('returns false when match just happened', () => {
+        expect(Logic.shouldAutoResetTracking(Date.now(), Date.now(), SIX_HOURS)).toBe(false);
+    });
+
+    test('works with custom threshold', () => {
+        const oneHour = 60 * 60 * 1000;
+        const lastMatch = Date.now() - (2 * oneHour); // 2 hours ago
+        expect(Logic.shouldAutoResetTracking(lastMatch, Date.now(), oneHour)).toBe(true);
+    });
+});
+
 describe('Integration: mid-session player fairness', () => {
     test('new players joining mid-session do not dominate match creation', () => {
         const counts = {};

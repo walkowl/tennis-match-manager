@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 13:25';
+const APP_VERSION_DATE = '2026-03-17 13:33';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
@@ -50,6 +50,7 @@ document.getElementById('confirmInactivePlayers').addEventListener('click', () =
 });
 
 function proceedWithMatchCreation() {
+    checkAutoResetTracking();
     const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers')) || [];
     const { activePlayers, updatedPlayers } = Logic.processSitouts(savedSelectedPlayers);
     // Save updated sitout states to localStorage and refresh UI
@@ -75,8 +76,24 @@ function saveMatchTracking() {
     try {
         localStorage.setItem('playerMatchCounts', JSON.stringify(playerMatchCounts));
         localStorage.setItem('playerTeammatePairings', JSON.stringify(playerTeammatePairings));
+        localStorage.setItem('lastMatchTimestamp', Date.now().toString());
     } catch (error) {
         console.error('Failed to save tracking data:', error);
+    }
+}
+
+function checkAutoResetTracking() {
+    try {
+        const lastMatch = parseInt(localStorage.getItem('lastMatchTimestamp'), 10) || null;
+        if (Logic.shouldAutoResetTracking(lastMatch, Date.now(), Logic.AUTO_RESET_THRESHOLD_MS)) {
+            playerMatchCounts = {};
+            playerTeammatePairings = {};
+            localStorage.removeItem('playerMatchCounts');
+            localStorage.removeItem('playerTeammatePairings');
+            localStorage.removeItem('lastMatchTimestamp');
+        }
+    } catch (error) {
+        console.error('Failed to check auto-reset:', error);
     }
 }
 
@@ -111,6 +128,7 @@ document.getElementById('confirmNewSession').addEventListener('click', () => {
     localStorage.removeItem('matchesData');
     localStorage.removeItem('playerMatchCounts');
     localStorage.removeItem('playerTeammatePairings');
+    localStorage.removeItem('lastMatchTimestamp');
 
     // Clear match tracking data
     playerMatchCounts = {};
