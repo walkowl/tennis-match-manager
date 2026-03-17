@@ -510,18 +510,18 @@ describe('filterSitoutPlayers', () => {
 });
 
 describe('processSitouts', () => {
-    test('sitout-1 players return to active and play this round', () => {
+    test('sitout-1 players are excluded this round and return to active next round', () => {
         const players = [
             { playerName: 'Alice', sitout: 1 },
             { playerName: 'Bob' },
         ];
         const { activePlayers, updatedPlayers } = Logic.processSitouts(players);
-        expect(activePlayers).toContain('Alice');
+        expect(activePlayers).not.toContain('Alice');
         expect(activePlayers).toContain('Bob');
         expect(updatedPlayers.find(p => p.playerName === 'Alice').sitout).toBeUndefined();
     });
 
-    test('sitout-2 players transition to sitout-1 and do NOT play', () => {
+    test('sitout-2 players are excluded this round and transition to sitout-1', () => {
         const players = [
             { playerName: 'Alice', sitout: 2 },
             { playerName: 'Bob' },
@@ -552,20 +552,38 @@ describe('processSitouts', () => {
         expect(activePlayers).toEqual(['Alice', 'Bob']);
     });
 
-    test('full lifecycle: sitout-2 → sitout-1 → active over two rounds', () => {
+    test('full lifecycle: sitout-2 → excluded, sitout-1 → excluded, then active', () => {
         const players = [
             { playerName: 'Alice', sitout: 2 },
             { playerName: 'Bob' },
         ];
-        // Round 1: Alice sits out, transitions to sitout-1
+        // Round 1: Alice excluded, transitions to sitout-1
         const round1 = Logic.processSitouts(players);
         expect(round1.activePlayers).not.toContain('Alice');
         expect(round1.updatedPlayers.find(p => p.playerName === 'Alice').sitout).toBe(1);
 
-        // Round 2: Alice returns to active
+        // Round 2: Alice excluded again (sitout-1), transitions to active
+        const round2 = Logic.processSitouts(round1.updatedPlayers);
+        expect(round2.activePlayers).not.toContain('Alice');
+        expect(round2.updatedPlayers.find(p => p.playerName === 'Alice').sitout).toBeUndefined();
+
+        // Round 3: Alice plays
+        const round3 = Logic.processSitouts(round2.updatedPlayers);
+        expect(round3.activePlayers).toContain('Alice');
+    });
+
+    test('sitout-1 player sits out exactly 1 round then plays', () => {
+        const players = [
+            { playerName: 'Alice', sitout: 1 },
+            { playerName: 'Bob' },
+        ];
+        // Round 1: Alice excluded, transitions to active
+        const round1 = Logic.processSitouts(players);
+        expect(round1.activePlayers).not.toContain('Alice');
+
+        // Round 2: Alice plays
         const round2 = Logic.processSitouts(round1.updatedPlayers);
         expect(round2.activePlayers).toContain('Alice');
-        expect(round2.updatedPlayers.find(p => p.playerName === 'Alice').sitout).toBeUndefined();
     });
 
     test('handles empty player list', () => {
@@ -584,14 +602,18 @@ describe('processSitouts', () => {
     test('handles mix of all statuses correctly', () => {
         const players = [
             { playerName: 'Active' },
-            { playerName: 'Returning', sitout: 1 },
-            { playerName: 'SittingOut', sitout: 2 },
+            { playerName: 'SitoutOne', sitout: 1 },
+            { playerName: 'SitoutTwo', sitout: 2 },
             { playerName: 'Gone', inactive: true },
         ];
         const { activePlayers, updatedPlayers } = Logic.processSitouts(players);
-        expect(activePlayers).toEqual(['Active', 'Returning']);
-        expect(updatedPlayers.find(p => p.playerName === 'SittingOut').sitout).toBe(1);
-        expect(updatedPlayers.find(p => p.playerName === 'Returning').sitout).toBeUndefined();
+        // Only active players play
+        expect(activePlayers).toEqual(['Active']);
+        // SitoutTwo transitions to sitout-1
+        expect(updatedPlayers.find(p => p.playerName === 'SitoutTwo').sitout).toBe(1);
+        // SitoutOne transitions to active (for next round)
+        expect(updatedPlayers.find(p => p.playerName === 'SitoutOne').sitout).toBeUndefined();
+        // Inactive stays
         expect(updatedPlayers.find(p => p.playerName === 'Gone').inactive).toBe(true);
     });
 });

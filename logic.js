@@ -289,8 +289,8 @@ function filterSitoutPlayers(players) {
 
 /**
  * Process sitout transitions and return active player names.
- * - sitout-2 → sitout-1 (excluded this round)
- * - sitout-1 → active (plays this round)
+ * - sitout-1 → excluded this round, returns to active next round
+ * - sitout-2 → excluded this round, transitions to sitout-1 for next round
  * - inactive → excluded silently
  * Returns { activePlayers: string[], updatedPlayers: player[] }
  */
@@ -301,11 +301,10 @@ function processSitouts(players) {
         if (p.inactive) {
             return updated; // stays inactive, excluded
         } else if (p.sitout === 2) {
-            updated.sitout = 1; // transition down, still excluded this round
+            updated.sitout = 1; // transition down, excluded this round, 1 more to go
             return updated;
         } else if (p.sitout === 1) {
-            delete updated.sitout; // returning to active, plays this round
-            activePlayers.push(p.playerName);
+            delete updated.sitout; // excluded this round, returns to active next round
             return updated;
         } else {
             activePlayers.push(p.playerName); // normal active player
