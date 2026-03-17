@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 22:11';
+const APP_VERSION_DATE = '2026-03-17 22:17';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -568,14 +568,17 @@ function toggleEditMode() {
 function openAddPlayerModal() {
     document.getElementById('playerModalLabel').textContent = 'Add New Player';
     document.getElementById('player-name-input').value = '';
+    document.getElementById('player-rating-input').value = '3';
     document.getElementById('editing-player-index').value = '';
     const playerModal = new bootstrap.Modal(document.getElementById('playerModal'));
     playerModal.show();
 }
 
 function openEditPlayerModal(playerName, index) {
+    const skillRatings = getSkillRatings();
     document.getElementById('playerModalLabel').textContent = 'Edit Player';
     document.getElementById('player-name-input').value = playerName;
+    document.getElementById('player-rating-input').value = skillRatings[playerName] || 3;
     document.getElementById('editing-player-index').value = index;
     const playerModal = new bootstrap.Modal(document.getElementById('playerModal'));
     playerModal.show();
@@ -583,6 +586,7 @@ function openEditPlayerModal(playerName, index) {
 
 function savePlayer() {
     const playerName = document.getElementById('player-name-input').value.trim();
+    const rating = parseInt(document.getElementById('player-rating-input').value, 10);
     const editingIndex = document.getElementById('editing-player-index').value;
     if (!playerName) {
         alert('Player name cannot be empty.');
@@ -596,12 +600,20 @@ function savePlayer() {
         alert('A player with this name already exists.');
         return;
     }
+    const oldName = editingIndex !== '' ? players[editingIndex] : null;
     if (editingIndex !== '') {
         players[editingIndex] = playerName;
     } else {
         players.push(playerName);
     }
     savePlayersInStorage(players);
+    // Save skill rating
+    const skillRatings = getSkillRatings();
+    if (oldName && oldName !== playerName) {
+        delete skillRatings[oldName];
+    }
+    skillRatings[playerName] = (rating >= 1 && rating <= 5) ? rating : 3;
+    saveSkillRatings(skillRatings);
     displayPlayers(players);
     const playerModal = bootstrap.Modal.getInstance(document.getElementById('playerModal'));
     playerModal.hide();
