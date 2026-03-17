@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 15:41';
+const APP_VERSION_DATE = '2026-03-17 15:50';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
@@ -664,10 +664,15 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
         reel.names = buildReelNames(allPlayers, reel.finalName, nameCount);
 
         // Build the strip with all name elements
-        reel.names.forEach(name => {
+        reel.names.forEach((name, idx) => {
             const nameEl = document.createElement('div');
             nameEl.classList.add('reel-name');
-            nameEl.textContent = Logic.formatPlayerName(name);
+            if (idx === reel.names.length - 1) {
+                // Last name is the final one — pre-render with skill badge
+                nameEl.innerHTML = formatPlayerNameWithSkill(name, skillRatings);
+            } else {
+                nameEl.textContent = Logic.formatPlayerName(name);
+            }
             reel.strip.appendChild(nameEl);
         });
     });
@@ -696,12 +701,9 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
                 if (elapsed >= reel.stopTime) {
                     reel.stopped = true;
                     stoppedCount++;
-                    // Replace strip with final styled name
-                    reel.viewport.innerHTML = '';
-                    const finalEl = document.createElement('div');
-                    finalEl.classList.add('reel-name', 'slot-landed');
-                    finalEl.innerHTML = formatPlayerNameWithSkill(reel.finalName, skillRatings);
-                    reel.viewport.appendChild(finalEl);
+                    // Just add the landing animation to the last name (already correct)
+                    const lastNameEl = reel.strip.lastElementChild;
+                    lastNameEl.classList.add('slot-landed');
                     playStopSound();
 
                     if (stoppedCount === reels.length) {
