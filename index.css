@@ -82,7 +82,7 @@ html, body {
 
 .reel-viewport {
     overflow: hidden;
-    height: 1.6em;
+    height: 30px;
     position: relative;
 }
 
@@ -93,10 +93,11 @@ html, body {
 }
 
 .reel-name {
-    height: 1.6em;
-    line-height: 1.6em;
+    height: 30px;
+    line-height: 30px;
     white-space: nowrap;
     flex-shrink: 0;
+    overflow: hidden;
 }
 
 .slot-landed {

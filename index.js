@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 15:50';
+const APP_VERSION_DATE = '2026-03-17 16:10';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
@@ -677,10 +677,13 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
         });
     });
 
-    // Start all reels spinning after a brief moment for DOM to render
+    // Start all reels spinning after layout is complete
+    requestAnimationFrame(() => {
     requestAnimationFrame(() => {
         reels.forEach(reel => {
-            const nameHeight = reel.viewport.offsetHeight || 28;
+            // Measure actual rendered height of first name element
+            const firstNameEl = reel.strip.firstElementChild;
+            const nameHeight = firstNameEl ? firstNameEl.offsetHeight : 28;
             const totalScroll = nameHeight * (reel.names.length - 1);
             reel.strip.style.transition = `transform ${reel.stopTime}ms cubic-bezier(0.15, 0.0, 0.15, 1.0)`;
             reel.strip.style.transform = `translateY(-${totalScroll}px)`;
@@ -736,6 +739,7 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
         }
 
         requestAnimationFrame(tickLoop);
+    });
     });
 }
 
