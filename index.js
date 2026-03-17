@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 21:50';
+const APP_VERSION_DATE = '2026-03-17 21:54';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -238,6 +238,63 @@ function getSkillRatings() {
 }
 
 
+function checkForUpdates() {
+    const statusEl = document.getElementById('update-status');
+    const btn = document.getElementById('check-update-btn');
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#666';
+    statusEl.textContent = 'Checking for updates...';
+    btn.disabled = true;
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(reg => {
+            if (reg) {
+                reg.update().then(() => {
+                    if (reg.waiting) {
+                        // New version ready — activate and reload
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        statusEl.style.color = '#198754';
+                        statusEl.textContent = '✅ Update found! Reloading...';
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else if (reg.installing) {
+                        // Update installing — wait for it
+                        statusEl.textContent = 'Installing update...';
+                        reg.installing.addEventListener('statechange', function () {
+                            if (this.state === 'installed') {
+                                this.postMessage({ type: 'SKIP_WAITING' });
+                                statusEl.style.color = '#198754';
+                                statusEl.textContent = '✅ Update installed! Reloading...';
+                                setTimeout(() => window.location.reload(), 1000);
+                            }
+                        });
+                    } else {
+                        statusEl.style.color = '#198754';
+                        statusEl.textContent = '✅ You are on the latest version.';
+                        btn.disabled = false;
+                    }
+                }).catch(err => {
+                    statusEl.style.color = '#dc3545';
+                    statusEl.textContent = '❌ Update check failed: ' + err.message;
+                    btn.disabled = false;
+                });
+            } else {
+                statusEl.style.color = '#666';
+                statusEl.textContent = 'No service worker registered.';
+                btn.disabled = false;
+            }
+        });
+    } else {
+        // Fallback: just hard reload
+        caches.keys().then(names => {
+            return Promise.all(names.map(name => caches.delete(name)));
+        }).then(() => {
+            statusEl.style.color = '#198754';
+            statusEl.textContent = '✅ Cache cleared! Reloading...';
+            setTimeout(() => window.location.reload(), 1000);
+        });
+    }
+}
+
 function loadPlayersFromUrlInput() {
     const urlInput = document.getElementById('players-url-input');
     const overwrite = document.getElementById('overwrite-players-check').checked;
@@ -404,6 +461,8 @@ function setupEventListeners() {
     document.getElementById('font-increase').addEventListener('click', () => applyFontScale(fontScale + 10));
     document.getElementById('font-decrease').addEventListener('click', () => applyFontScale(fontScale - 10));
     document.getElementById('load-players-btn').addEventListener('click', loadPlayersFromUrlInput);
+    document.getElementById('check-update-btn').addEventListener('click', checkForUpdates);
+    document.getElementById('options-version-date').textContent = APP_VERSION_DATE;
     // Pre-fill URL input from current query param if present
     const urlParams = new URLSearchParams(window.location.search);
     const currentUrl = urlParams.get('players_url');

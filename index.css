@@ -112,6 +112,28 @@ html, body {
     100% { transform: scale(1); color: inherit; }
 }
 
+.update-control {
+    padding: 10px 0;
+}
+
+.update-control label {
+    font-size: 18px;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.update-control .btn {
+    min-height: 44px;
+    font-size: 16px;
+}
+
+#update-status {
+    font-size: 14px;
+    padding: 8px;
+    border-radius: 4px;
+}
+
 .load-players-control {
     padding: 10px 0;
 }
