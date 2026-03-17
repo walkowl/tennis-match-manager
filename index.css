@@ -80,6 +80,13 @@ html, body {
     color: var(--oxford-blue);
 }
 
+.modal-footer .btn {
+    min-width: 120px;
+    min-height: 48px;
+    font-size: 18px;
+    padding: 10px 24px;
+}
+
 .skill-badge {
     font-size: 10px;
     color: transparent;
