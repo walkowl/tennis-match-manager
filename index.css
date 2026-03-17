@@ -82,7 +82,7 @@ html, body {
 
 .reel-viewport {
     overflow: hidden;
-    height: 38px;
+    height: 46px;
     position: relative;
 }
 
@@ -93,8 +93,8 @@ html, body {
 }
 
 .reel-name {
-    height: 38px;
-    line-height: 38px;
+    height: 46px;
+    line-height: 46px;
     white-space: nowrap;
     flex-shrink: 0;
     overflow: hidden;
