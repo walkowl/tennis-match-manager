@@ -277,14 +277,13 @@ function validatePlayerName(playerName, existingPlayers, editingIndex) {
 }
 
 /**
- * Filter players who will actually sit out this round.
- * sitout-2 players sit out and transition to sitout-1.
- * sitout-1 players are returning this round (they already sat out) — they play.
+ * Filter players with any sitout status for the warning popup.
+ * Both sitout-1 and sitout-2 players are shown in the warning.
  * Fully inactive players are excluded silently (no warning needed).
  */
 function filterSitoutPlayers(players) {
     return players
-        .filter(p => p.sitout === 2)
+        .filter(p => p.sitout === 1 || p.sitout === 2)
         .map(p => p.playerName);
 }
 

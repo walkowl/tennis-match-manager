@@ -450,22 +450,22 @@ describe('parsePlayerList', () => {
 });
 
 describe('filterSitoutPlayers', () => {
-    test('returns only sitout-2 players (those actually sitting out this round)', () => {
+    test('returns both sitout-1 and sitout-2 players', () => {
         const players = [
             { playerName: 'Alice' },
             { playerName: 'Bob', sitout: 1 },
             { playerName: 'Charlie', inactive: true },
             { playerName: 'Dave', sitout: 2 },
         ];
-        expect(Logic.filterSitoutPlayers(players)).toEqual(['Dave']);
+        expect(Logic.filterSitoutPlayers(players)).toEqual(['Bob', 'Dave']);
     });
 
-    test('does not include sitout-1 players (they are returning)', () => {
+    test('includes sitout-1 players in warning', () => {
         const players = [
             { playerName: 'Alice', sitout: 1 },
             { playerName: 'Bob', sitout: 1 },
         ];
-        expect(Logic.filterSitoutPlayers(players)).toEqual([]);
+        expect(Logic.filterSitoutPlayers(players)).toEqual(['Alice', 'Bob']);
     });
 
     test('returns empty array when no one is sitting out', () => {
@@ -496,7 +496,7 @@ describe('filterSitoutPlayers', () => {
         expect(Logic.filterSitoutPlayers([])).toEqual([]);
     });
 
-    test('handles mix of all statuses — only sitout-2 warned', () => {
+    test('handles mix of all statuses — both sitout levels warned', () => {
         const players = [
             { playerName: 'Active1' },
             { playerName: 'Sitout1', sitout: 1 },
@@ -505,7 +505,7 @@ describe('filterSitoutPlayers', () => {
             { playerName: 'Sitout2', sitout: 2 },
             { playerName: 'Inactive2', inactive: true },
         ];
-        expect(Logic.filterSitoutPlayers(players)).toEqual(['Sitout2']);
+        expect(Logic.filterSitoutPlayers(players)).toEqual(['Sitout1', 'Sitout2']);
     });
 });
 
