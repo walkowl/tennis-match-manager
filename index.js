@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 21:38';
+const APP_VERSION_DATE = '2026-03-17 21:42';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -117,7 +117,10 @@ document.getElementById('new-matches').addEventListener('click', () => {
 });
 
 document.getElementById('confirmNewSession').addEventListener('click', () => {
-    // This code runs when the "New Session" button in the modal is clicked
+    // Force re-enable all buttons
+    isAnimating = false;
+    createMatchesButton.disabled = false;
+
     // Unselect all players
     document.querySelectorAll('.predefined-player.selected').forEach(player => {
         player.classList.remove('selected');
@@ -608,6 +611,23 @@ function buildReelNames(allPlayers, finalName, count) {
 function animateMatchReveal(matches, restingPlayers, allPlayers) {
     isAnimating = true;
     createMatchesButton.disabled = true;
+
+    // No matches to animate — show resting and re-enable immediately
+    if (!matches || matches.length === 0) {
+        const matchesList = document.getElementById('matches-list');
+        matchesList.innerHTML = '';
+        if (restingPlayers && restingPlayers.length > 0) {
+            const resting = document.createElement('div');
+            resting.classList.add('resting');
+            resting.textContent = `Resting: ${restingPlayers.join(', ')}`;
+            matchesList.appendChild(resting);
+        }
+        updateNoMatchesMessage();
+        isAnimating = false;
+        createMatchesButton.disabled = false;
+        return;
+    }
+
     const matchesList = document.getElementById('matches-list');
     matchesList.innerHTML = '';
 
