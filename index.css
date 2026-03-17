@@ -80,6 +80,24 @@ html, body {
     color: var(--oxford-blue);
 }
 
+.slot-spin {
+    color: #999;
+    font-style: italic;
+    transition: none;
+    min-height: 1.5em;
+}
+
+.slot-landed {
+    animation: slotLand 0.3s ease-out;
+    font-weight: bold;
+}
+
+@keyframes slotLand {
+    0% { transform: scale(1.2); color: #e8a735; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); color: inherit; }
+}
+
 .modal-footer .btn {
     min-width: 120px;
     min-height: 48px;

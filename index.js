@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 13:33';
+const APP_VERSION_DATE = '2026-03-17 15:26';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
@@ -67,8 +67,7 @@ function proceedWithMatchCreation() {
     updateMatchTracking(matches);
     const dataToSave = { matches: matches, resting: restingPlayers };
     localStorage.setItem('matchesData', JSON.stringify(dataToSave));
-    displaySavedMatches();
-    createBouncingBalls();
+    animateMatchReveal(matches, restingPlayers, activePlayers);
 }
 
 
@@ -545,6 +544,153 @@ function saveSelectedPredefinedPlayers() {
     updatePlayerCount();
 }
 
+
+// Audio context for slot machine clicking sound
+let audioCtx = null;
+function playTick() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 800 + Math.random() * 400;
+    osc.type = 'square';
+    gain.gain.value = 0.05;
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.05);
+}
+
+function playStopSound() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 1200;
+    osc.type = 'sine';
+    gain.gain.value = 0.1;
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.15);
+}
+
+function animateMatchReveal(matches, restingPlayers, allPlayers) {
+    const matchesList = document.getElementById('matches-list');
+    matchesList.innerHTML = '';
+    updateNoMatchesMessage();
+
+    const skillRatings = getSkillRatings();
+
+    // Build the match elements with placeholder spinning slots
+    const slots = []; // { element, finalName, court }
+    matches.forEach(matchData => {
+        const match = document.createElement('div');
+        match.classList.add('match');
+
+        const courtNumber = document.createElement('div');
+        courtNumber.innerHTML = `<img src="assets/tennis-ball.png" alt="Court" width="24" height="24"> Court ${matchData.court}`;
+        courtNumber.classList.add('court-number');
+
+        const teamOne = document.createElement('div');
+        teamOne.classList.add('team');
+        const t1p1 = document.createElement('div');
+        t1p1.classList.add('slot-spin');
+        const t1p2 = document.createElement('div');
+        t1p2.classList.add('slot-spin');
+        teamOne.appendChild(t1p1);
+        teamOne.appendChild(t1p2);
+
+        const versus = document.createElement('div');
+        versus.classList.add('versus');
+        versus.textContent = 'vs';
+
+        const teamTwo = document.createElement('div');
+        teamTwo.classList.add('team');
+        const t2p1 = document.createElement('div');
+        t2p1.classList.add('slot-spin');
+        const t2p2 = document.createElement('div');
+        t2p2.classList.add('slot-spin');
+        teamTwo.appendChild(t2p1);
+        teamTwo.appendChild(t2p2);
+
+        match.appendChild(courtNumber);
+        match.appendChild(teamOne);
+        match.appendChild(versus);
+        match.appendChild(teamTwo);
+        matchesList.appendChild(match);
+
+        slots.push({ el: t1p1, finalName: matchData.teamOne[0] });
+        slots.push({ el: t1p2, finalName: matchData.teamOne[1] });
+        slots.push({ el: t2p1, finalName: matchData.teamTwo[0] });
+        slots.push({ el: t2p2, finalName: matchData.teamTwo[1] });
+    });
+
+    // Assign each slot a different stop time (staggered)
+    const BASE_DURATION = 1500;  // minimum spin time ms
+    const STAGGER = 300;         // ms between each slot stopping
+
+    // Shuffle slot stop order for excitement
+    const stopOrder = slots.map((_, i) => i);
+    Logic.shuffleArray(stopOrder);
+
+    slots.forEach((slot, i) => {
+        const stopIndex = stopOrder.indexOf(i);
+        slot.stopTime = BASE_DURATION + (stopIndex * STAGGER);
+    });
+
+    const startTime = Date.now();
+    const totalDuration = BASE_DURATION + (slots.length * STAGGER);
+
+    function tick() {
+        const elapsed = Date.now() - startTime;
+        let allDone = true;
+
+        slots.forEach(slot => {
+            if (slot.stopped) return;
+
+            if (elapsed >= slot.stopTime) {
+                // Stop on final name
+                slot.el.innerHTML = formatPlayerNameWithSkill(slot.finalName, skillRatings);
+                slot.el.classList.remove('slot-spin');
+                slot.el.classList.add('slot-landed');
+                slot.stopped = true;
+                playStopSound();
+                return;
+            }
+
+            allDone = false;
+
+            // Slow down as we approach stop time
+            const timeLeft = slot.stopTime - elapsed;
+            const interval = Math.min(50, 30 + (1 - timeLeft / slot.stopTime) * 150);
+
+            if (!slot.lastTick || (elapsed - slot.lastTick) >= interval) {
+                // Show random player name
+                const randomName = allPlayers[Math.floor(Math.random() * allPlayers.length)];
+                slot.el.textContent = Logic.formatPlayerName(randomName);
+                slot.lastTick = elapsed;
+                playTick();
+            }
+        });
+
+        if (!allDone) {
+            requestAnimationFrame(tick);
+        } else {
+            // All slots stopped - show resting players and bouncing balls
+            if (restingPlayers && restingPlayers.length > 0) {
+                const resting = document.createElement('div');
+                resting.classList.add('resting');
+                resting.textContent = `Resting: ${restingPlayers.join(', ')}`;
+                matchesList.appendChild(resting);
+            }
+            updateNoMatchesMessage();
+            setTimeout(createBouncingBalls, 300);
+        }
+    }
+
+    requestAnimationFrame(tick);
+}
 
 function showVersionInfo() {
     const versionEl = document.getElementById('version-info');
