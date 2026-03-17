@@ -4,7 +4,9 @@
   "description": "Tennis Match Manager is a web application designed to help you organize and manage tennis matches efficiently.",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest logic.test.js",
+    "test:ui": "jest ui.test.js --testTimeout=30000",
+    "test:all": "jest --testTimeout=30000"
   },
   "repository": {
     "type": "git",
@@ -18,6 +20,7 @@
   },
   "homepage": "https://github.com/walkowl/tennis-match-manager#readme",
   "devDependencies": {
-    "jest": "^30.3.0"
+    "jest": "^30.3.0",
+    "puppeteer": "^24.39.1"
   }
 }
