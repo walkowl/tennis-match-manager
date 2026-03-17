@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 15:31';
+const APP_VERSION_DATE = '2026-03-17 15:35';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
@@ -547,18 +547,18 @@ function saveSelectedPredefinedPlayers() {
 
 // Audio context for slot machine clicking sound
 let audioCtx = null;
-function playTick() {
+function playTick(pitch) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-    osc.frequency.value = 800 + Math.random() * 400;
+    osc.frequency.value = (pitch || 300) + Math.random() * 100;
     osc.type = 'square';
-    gain.gain.value = 0.05;
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+    gain.gain.value = 0.04;
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
     osc.start(audioCtx.currentTime);
-    osc.stop(audioCtx.currentTime + 0.05);
+    osc.stop(audioCtx.currentTime + 0.06);
 }
 
 function playStopSound() {
@@ -567,12 +567,12 @@ function playStopSound() {
     const gain = audioCtx.createGain();
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-    osc.frequency.value = 1200;
+    osc.frequency.value = 600;
     osc.type = 'sine';
-    gain.gain.value = 0.1;
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+    gain.gain.value = 0.12;
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
     osc.start(audioCtx.currentTime);
-    osc.stop(audioCtx.currentTime + 0.15);
+    osc.stop(audioCtx.currentTime + 0.2);
 }
 
 function animateMatchReveal(matches, restingPlayers, allPlayers) {
@@ -636,21 +636,39 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
     // Scroll matches into view
     matchesList.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    // Assign each slot a different stop time (staggered)
-    const BASE_DURATION = 1500;  // minimum spin time ms
-    const STAGGER = Math.min(300, 2000 / Math.max(slots.length, 1)); // cap total stagger at ~2s
+    // Timing: total animation 3-6s
+    // Most slots stop in first 2s, last 3 slots get dramatic slowdown
+    const FAST_PHASE = 2000;   // first slots stop within 2s
+    const DRAMA_EXTRA = 3000;  // last few slots get extra time
+    const DRAMA_COUNT = 3;     // how many slots get the dramatic treatment
 
     // Shuffle slot stop order for excitement
     const stopOrder = slots.map((_, i) => i);
     Logic.shuffleArray(stopOrder);
 
+    const normalCount = Math.max(slots.length - DRAMA_COUNT, 0);
+    const normalStagger = normalCount > 0 ? FAST_PHASE / normalCount : 0;
+
     slots.forEach((slot, i) => {
         const stopIndex = stopOrder.indexOf(i);
-        slot.stopTime = BASE_DURATION + (stopIndex * STAGGER);
+        if (stopIndex < normalCount) {
+            // Normal slots: stop quickly in first 2s
+            slot.stopTime = 500 + (stopIndex * normalStagger);
+            slot.dramatic = false;
+        } else {
+            // Dramatic slots: spread over remaining time with extra drama
+            const dramaIndex = stopIndex - normalCount;
+            slot.stopTime = FAST_PHASE + 500 + (dramaIndex * (DRAMA_EXTRA / DRAMA_COUNT));
+            slot.dramatic = true;
+        }
+        // Build a "nearby names" list for dramatic back-and-forth
+        slot.nearbyNames = [slot.finalName];
+        for (let n = 0; n < 4; n++) {
+            slot.nearbyNames.push(allPlayers[Math.floor(Math.random() * allPlayers.length)]);
+        }
     });
 
     const startTime = Date.now();
-    const totalDuration = BASE_DURATION + (slots.length * STAGGER);
 
     function tick() {
         const elapsed = Date.now() - startTime;
@@ -671,16 +689,34 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
 
             allDone = false;
 
-            // Slow down as we approach stop time
             const timeLeft = slot.stopTime - elapsed;
-            const interval = Math.min(50, 30 + (1 - timeLeft / slot.stopTime) * 150);
+            const progress = 1 - (timeLeft / slot.stopTime);
+
+            // Calculate interval: starts fast (40ms), slows dramatically near the end
+            let interval;
+            if (slot.dramatic && progress > 0.6) {
+                // Dramatic phase: very slow, 300-800ms between ticks
+                const dramaProgress = (progress - 0.6) / 0.4; // 0 to 1 within drama zone
+                interval = 300 + dramaProgress * 500;
+            } else {
+                // Normal phase: 40-120ms
+                interval = 40 + progress * 80;
+            }
 
             if (!slot.lastTick || (elapsed - slot.lastTick) >= interval) {
-                // Show random player name
-                const randomName = allPlayers[Math.floor(Math.random() * allPlayers.length)];
-                slot.el.textContent = Logic.formatPlayerName(randomName);
+                let name;
+                if (slot.dramatic && progress > 0.7) {
+                    // Back-and-forth between final name and nearby names
+                    const nearIdx = Math.floor(Math.random() * slot.nearbyNames.length);
+                    name = slot.nearbyNames[nearIdx];
+                } else {
+                    name = allPlayers[Math.floor(Math.random() * allPlayers.length)];
+                }
+                slot.el.textContent = Logic.formatPlayerName(name);
                 slot.lastTick = elapsed;
-                playTick();
+                // Lower pitch as it slows down
+                const pitch = slot.dramatic && progress > 0.6 ? 200 : 300;
+                playTick(pitch);
             }
         });
 
