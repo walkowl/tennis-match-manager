@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 16:10';
+const APP_VERSION_DATE = '2026-03-17 16:17';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
