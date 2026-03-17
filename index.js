@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 22:17';
+const APP_VERSION_DATE = '2026-03-17 22:21';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -446,14 +446,13 @@ function displayPlayers(players) {
         const iconsContainer = document.createElement('div');
         // Add edit icon
         const editIcon = document.createElement('span');
-        editIcon.innerHTML = '✏️'; // Example edit icon, replace with your preferred icon
+        editIcon.innerHTML = '✏️';
         editIcon.classList.add('edit-icon');
-        editIcon.onclick = () => openEditPlayerModal(player, index);
-        // Add delete icon
+        editIcon.onclick = (e) => { e.stopPropagation(); openEditPlayerModal(player, index); };
         const deleteIcon = document.createElement('span');
-        deleteIcon.innerHTML = '&#10060;'; // Example delete icon, replace with your preferred icon
+        deleteIcon.innerHTML = '&#10060;';
         deleteIcon.classList.add('delete-icon');
-        deleteIcon.onclick = () => deletePlayer(index);
+        deleteIcon.onclick = (e) => { e.stopPropagation(); deletePlayer(index); };
 
         if (!isEditMode) {
             editIcon.classList.add('edit-icon', 'hidden');
