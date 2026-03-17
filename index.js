@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 10:45';
+const APP_VERSION_DATE = '2026-03-17 12:55';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
@@ -50,20 +50,11 @@ document.getElementById('confirmInactivePlayers').addEventListener('click', () =
 });
 
 function proceedWithMatchCreation() {
-    const allPlayers = Array.from(document.querySelectorAll('#selected-players div'));
-    const activePlayers = allPlayers.filter(player => {
-        if (player.classList.contains('inactive')) {
-            return false;
-        } else if (player.classList.contains('sitout-2')) {
-            player.classList.remove('sitout-2');
-            player.classList.add('sitout-1');
-            return false;
-        } else if (player.classList.contains('sitout-1')) {
-            player.classList.remove('sitout-1');
-            return false;
-        }
-        return true;
-    }).map(player => player.textContent);
+    const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers')) || [];
+    const { activePlayers, updatedPlayers } = Logic.processSitouts(savedSelectedPlayers);
+    // Save updated sitout states to localStorage and refresh UI
+    localStorage.setItem('selectedPlayers', JSON.stringify(updatedPlayers));
+    addSelectedPlayers();
     // Initialize new mid-session players with average match count for fairness
     Logic.initializeNewPlayers(activePlayers, playerMatchCounts, playerTeammatePairings);
     // Shuffle players to introduce randomness

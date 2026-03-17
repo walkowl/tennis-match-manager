@@ -277,13 +277,43 @@ function validatePlayerName(playerName, existingPlayers, editingIndex) {
 }
 
 /**
- * Filter players to find only those sitting out (not fully inactive).
- * Returns names of players with sitout status.
+ * Filter players who will actually sit out this round.
+ * sitout-2 players sit out and transition to sitout-1.
+ * sitout-1 players are returning this round (they already sat out) — they play.
+ * Fully inactive players are excluded silently (no warning needed).
  */
 function filterSitoutPlayers(players) {
     return players
-        .filter(p => p.sitout === 1 || p.sitout === 2)
+        .filter(p => p.sitout === 2)
         .map(p => p.playerName);
+}
+
+/**
+ * Process sitout transitions and return active player names.
+ * - sitout-2 → sitout-1 (excluded this round)
+ * - sitout-1 → active (plays this round)
+ * - inactive → excluded silently
+ * Returns { activePlayers: string[], updatedPlayers: player[] }
+ */
+function processSitouts(players) {
+    const activePlayers = [];
+    const updatedPlayers = players.map(p => {
+        const updated = { ...p };
+        if (p.inactive) {
+            return updated; // stays inactive, excluded
+        } else if (p.sitout === 2) {
+            updated.sitout = 1; // transition down, still excluded this round
+            return updated;
+        } else if (p.sitout === 1) {
+            delete updated.sitout; // returning to active, plays this round
+            activePlayers.push(p.playerName);
+            return updated;
+        } else {
+            activePlayers.push(p.playerName); // normal active player
+            return updated;
+        }
+    });
+    return { activePlayers, updatedPlayers };
 }
 
 /**
@@ -345,6 +375,7 @@ const LogicExports = {
     validatePlayerName,
     parsePlayerList,
     filterSitoutPlayers,
+    processSitouts,
     getSkillGapPenalty,
     scoreMatch,
     SCORING_WEIGHTS

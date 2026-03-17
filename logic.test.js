@@ -450,14 +450,22 @@ describe('parsePlayerList', () => {
 });
 
 describe('filterSitoutPlayers', () => {
-    test('returns only sitout players, not inactive ones', () => {
+    test('returns only sitout-2 players (those actually sitting out this round)', () => {
         const players = [
             { playerName: 'Alice' },
             { playerName: 'Bob', sitout: 1 },
             { playerName: 'Charlie', inactive: true },
             { playerName: 'Dave', sitout: 2 },
         ];
-        expect(Logic.filterSitoutPlayers(players)).toEqual(['Bob', 'Dave']);
+        expect(Logic.filterSitoutPlayers(players)).toEqual(['Dave']);
+    });
+
+    test('does not include sitout-1 players (they are returning)', () => {
+        const players = [
+            { playerName: 'Alice', sitout: 1 },
+            { playerName: 'Bob', sitout: 1 },
+        ];
+        expect(Logic.filterSitoutPlayers(players)).toEqual([]);
     });
 
     test('returns empty array when no one is sitting out', () => {
@@ -488,7 +496,7 @@ describe('filterSitoutPlayers', () => {
         expect(Logic.filterSitoutPlayers([])).toEqual([]);
     });
 
-    test('handles mix of all statuses', () => {
+    test('handles mix of all statuses — only sitout-2 warned', () => {
         const players = [
             { playerName: 'Active1' },
             { playerName: 'Sitout1', sitout: 1 },
@@ -497,7 +505,94 @@ describe('filterSitoutPlayers', () => {
             { playerName: 'Sitout2', sitout: 2 },
             { playerName: 'Inactive2', inactive: true },
         ];
-        expect(Logic.filterSitoutPlayers(players)).toEqual(['Sitout1', 'Sitout2']);
+        expect(Logic.filterSitoutPlayers(players)).toEqual(['Sitout2']);
+    });
+});
+
+describe('processSitouts', () => {
+    test('sitout-1 players return to active and play this round', () => {
+        const players = [
+            { playerName: 'Alice', sitout: 1 },
+            { playerName: 'Bob' },
+        ];
+        const { activePlayers, updatedPlayers } = Logic.processSitouts(players);
+        expect(activePlayers).toContain('Alice');
+        expect(activePlayers).toContain('Bob');
+        expect(updatedPlayers.find(p => p.playerName === 'Alice').sitout).toBeUndefined();
+    });
+
+    test('sitout-2 players transition to sitout-1 and do NOT play', () => {
+        const players = [
+            { playerName: 'Alice', sitout: 2 },
+            { playerName: 'Bob' },
+        ];
+        const { activePlayers, updatedPlayers } = Logic.processSitouts(players);
+        expect(activePlayers).not.toContain('Alice');
+        expect(activePlayers).toContain('Bob');
+        expect(updatedPlayers.find(p => p.playerName === 'Alice').sitout).toBe(1);
+    });
+
+    test('inactive players stay excluded silently', () => {
+        const players = [
+            { playerName: 'Alice', inactive: true },
+            { playerName: 'Bob' },
+        ];
+        const { activePlayers, updatedPlayers } = Logic.processSitouts(players);
+        expect(activePlayers).not.toContain('Alice');
+        expect(activePlayers).toContain('Bob');
+        expect(updatedPlayers.find(p => p.playerName === 'Alice').inactive).toBe(true);
+    });
+
+    test('active players with no status play normally', () => {
+        const players = [
+            { playerName: 'Alice' },
+            { playerName: 'Bob' },
+        ];
+        const { activePlayers } = Logic.processSitouts(players);
+        expect(activePlayers).toEqual(['Alice', 'Bob']);
+    });
+
+    test('full lifecycle: sitout-2 → sitout-1 → active over two rounds', () => {
+        const players = [
+            { playerName: 'Alice', sitout: 2 },
+            { playerName: 'Bob' },
+        ];
+        // Round 1: Alice sits out, transitions to sitout-1
+        const round1 = Logic.processSitouts(players);
+        expect(round1.activePlayers).not.toContain('Alice');
+        expect(round1.updatedPlayers.find(p => p.playerName === 'Alice').sitout).toBe(1);
+
+        // Round 2: Alice returns to active
+        const round2 = Logic.processSitouts(round1.updatedPlayers);
+        expect(round2.activePlayers).toContain('Alice');
+        expect(round2.updatedPlayers.find(p => p.playerName === 'Alice').sitout).toBeUndefined();
+    });
+
+    test('handles empty player list', () => {
+        const { activePlayers, updatedPlayers } = Logic.processSitouts([]);
+        expect(activePlayers).toEqual([]);
+        expect(updatedPlayers).toEqual([]);
+    });
+
+    test('does not mutate original player objects', () => {
+        const original = { playerName: 'Alice', sitout: 1 };
+        const players = [original];
+        Logic.processSitouts(players);
+        expect(original.sitout).toBe(1); // original unchanged
+    });
+
+    test('handles mix of all statuses correctly', () => {
+        const players = [
+            { playerName: 'Active' },
+            { playerName: 'Returning', sitout: 1 },
+            { playerName: 'SittingOut', sitout: 2 },
+            { playerName: 'Gone', inactive: true },
+        ];
+        const { activePlayers, updatedPlayers } = Logic.processSitouts(players);
+        expect(activePlayers).toEqual(['Active', 'Returning']);
+        expect(updatedPlayers.find(p => p.playerName === 'SittingOut').sitout).toBe(1);
+        expect(updatedPlayers.find(p => p.playerName === 'Returning').sitout).toBeUndefined();
+        expect(updatedPlayers.find(p => p.playerName === 'Gone').inactive).toBe(true);
     });
 });
 
