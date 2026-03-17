@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 21:32';
+const APP_VERSION_DATE = '2026-03-17 21:38';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -337,8 +337,8 @@ function setupEventListeners() {
     // Add event listener for the toggle edit mode button
     document.getElementById('toggle-edit-mode').addEventListener('click', toggleEditMode);
     document.getElementById('player-list-label').addEventListener('click', createBouncingBalls);
-    document.getElementById('player-list-label').addEventListener('dblclick', showVersionInfo);
-    document.getElementById('matches-list').addEventListener('dblclick', toggleSkillBadges);
+    addDoubleTapListener(document.getElementById('player-list-label'), showVersionInfo);
+    addDoubleTapListener(document.getElementById('matches-list'), toggleSkillBadges);
     document.getElementById('options-btn').addEventListener('click', () => {
         const optionsModal = new bootstrap.Modal(document.getElementById('optionsModal'));
         optionsModal.show();
@@ -764,6 +764,24 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
         requestAnimationFrame(tickLoop);
     });
     });
+}
+
+// Custom double-tap handler that works with touch-action: manipulation
+function addDoubleTapListener(element, callback, delay) {
+    let lastTap = 0;
+    const tapDelay = delay || 400;
+    element.addEventListener('touchend', function (e) {
+        const now = Date.now();
+        if (now - lastTap < tapDelay) {
+            e.preventDefault();
+            callback();
+            lastTap = 0;
+        } else {
+            lastTap = now;
+        }
+    });
+    // Keep dblclick for desktop/mouse
+    element.addEventListener('dblclick', callback);
 }
 
 function showVersionInfo() {
