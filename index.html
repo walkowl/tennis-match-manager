@@ -163,25 +163,30 @@
                     </div>
                 </div>
                 <hr>
-                <div class="update-control">
-                    <label>App Version</label>
-                    <div class="d-flex align-items-center gap-3">
-                        <span id="options-version-date" class="text-muted" style="font-size:14px;"></span>
-                        <button class="btn btn-outline-primary" id="check-update-btn">🔄 Check for Updates</button>
+                <details class="advanced-options">
+                    <summary>Advanced</summary>
+                    <div class="mt-3">
+                        <div class="update-control">
+                            <label>App Version</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <span id="options-version-date" class="text-muted" style="font-size:14px;"></span>
+                                <button class="btn btn-outline-primary" id="check-update-btn">🔄 Check for Updates</button>
+                            </div>
+                            <div id="update-status" class="mt-2" style="display:none;"></div>
+                        </div>
+                        <hr>
+                        <div class="load-players-control">
+                            <label>Load Players from URL</label>
+                            <input type="text" class="form-control" id="players-url-input" placeholder="https://example.com/players.txt">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="overwrite-players-check">
+                                <label class="form-check-label" for="overwrite-players-check">Overwrite existing players</label>
+                            </div>
+                            <button class="btn btn-primary mt-2" id="load-players-btn">Load Players</button>
+                            <div id="load-players-status" class="mt-2" style="display:none;"></div>
+                        </div>
                     </div>
-                    <div id="update-status" class="mt-2" style="display:none;"></div>
-                </div>
-                <hr>
-                <div class="load-players-control">
-                    <label>Load Players from URL</label>
-                    <input type="text" class="form-control" id="players-url-input" placeholder="https://example.com/players.txt">
-                    <div class="form-check mt-2">
-                        <input class="form-check-input" type="checkbox" id="overwrite-players-check">
-                        <label class="form-check-label" for="overwrite-players-check">Overwrite existing players</label>
-                    </div>
-                    <button class="btn btn-primary mt-2" id="load-players-btn">Load Players</button>
-                    <div id="load-players-status" class="mt-2" style="display:none;"></div>
-                </div>
+                </details>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

@@ -112,6 +112,17 @@ html, body {
     100% { transform: scale(1); color: inherit; }
 }
 
+.advanced-options summary {
+    font-size: 16px;
+    color: #666;
+    cursor: pointer;
+    padding: 5px 0;
+}
+
+.advanced-options summary:hover {
+    color: #333;
+}
+
 .update-control {
     padding: 10px 0;
 }
