@@ -390,62 +390,90 @@ describe('validatePlayerName', () => {
 });
 
 describe('parsePlayerList', () => {
-    test('splits by newlines and returns names and default skills', () => {
-        const result = Logic.parsePlayerList('Alice\nBob\nCharlie');
-        expect(result.names).toEqual(['Alice', 'Bob', 'Charlie']);
-        expect(result.skills).toEqual({ Alice: 3, Bob: 3, Charlie: 3 });
-    });
-
-    test('parses skill ratings from comma-separated format', () => {
-        const result = Logic.parsePlayerList('Alice,3\nBob,5\nCharlie,1');
+    test('parses valid CSV with header and returns names and skills', () => {
+        const result = Logic.parsePlayerList('name,rating\nAlice,3\nBob,5\nCharlie,1');
+        expect(result.valid).toBe(true);
         expect(result.names).toEqual(['Alice', 'Bob', 'Charlie']);
         expect(result.skills).toEqual({ Alice: 3, Bob: 5, Charlie: 1 });
     });
 
-    test('defaults to skill 3 when no skill specified', () => {
-        const result = Logic.parsePlayerList('Alice\nBob,2');
+    test('defaults to skill 3 when rating column omitted', () => {
+        const result = Logic.parsePlayerList('name,rating\nAlice\nBob,2');
+        expect(result.valid).toBe(true);
         expect(result.skills.Alice).toBe(3);
         expect(result.skills.Bob).toBe(2);
     });
 
+    test('accepts header with name only (no rating column)', () => {
+        const result = Logic.parsePlayerList('name\nAlice\nBob');
+        expect(result.valid).toBe(true);
+        expect(result.names).toEqual(['Alice', 'Bob']);
+        expect(result.skills).toEqual({ Alice: 3, Bob: 3 });
+    });
+
+    test('rejects file without valid header', () => {
+        const result = Logic.parsePlayerList('Alice,3\nBob,5');
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain('header');
+    });
+
+    test('rejects file with wrong header columns', () => {
+        const result = Logic.parsePlayerList('player,score\nAlice,3');
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain('header');
+    });
+
+    test('rejects empty file', () => {
+        const result = Logic.parsePlayerList('');
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain('empty');
+    });
+
+    test('header is case-insensitive', () => {
+        const result = Logic.parsePlayerList('Name,Rating\nAlice,4');
+        expect(result.valid).toBe(true);
+        expect(result.names).toEqual(['Alice']);
+        expect(result.skills.Alice).toBe(4);
+    });
+
     test('clamps invalid skill values to 3', () => {
-        const result = Logic.parsePlayerList('Alice,0\nBob,6\nCharlie,-1');
+        const result = Logic.parsePlayerList('name,rating\nAlice,0\nBob,6\nCharlie,-1');
+        expect(result.valid).toBe(true);
         expect(result.skills.Alice).toBe(3);
         expect(result.skills.Bob).toBe(3);
         expect(result.skills.Charlie).toBe(3);
     });
 
     test('filters empty lines', () => {
-        const result = Logic.parsePlayerList('Alice\n\nBob\n\n');
+        const result = Logic.parsePlayerList('name,rating\nAlice,3\n\nBob,2\n\n');
+        expect(result.valid).toBe(true);
         expect(result.names).toEqual(['Alice', 'Bob']);
     });
 
     test('trims whitespace from names and skills', () => {
-        const result = Logic.parsePlayerList('  Alice , 3 \n  Bob  ');
+        const result = Logic.parsePlayerList('name , rating \n  Alice , 3 \n  Bob  ');
+        expect(result.valid).toBe(true);
         expect(result.names).toEqual(['Alice', 'Bob']);
         expect(result.skills.Alice).toBe(3);
     });
 
-    test('handles single player', () => {
-        const result = Logic.parsePlayerList('Alice');
-        expect(result.names).toEqual(['Alice']);
-    });
-
-    test('handles empty string', () => {
-        const result = Logic.parsePlayerList('');
-        expect(result.names).toEqual([]);
-        expect(result.skills).toEqual({});
-    });
-
     test('handles Windows-style line endings', () => {
-        const result = Logic.parsePlayerList('Alice,3\r\nBob,4\r\nCharlie,5');
-        expect(result.names).toEqual(['Alice', 'Bob', 'Charlie']);
-        expect(result.skills).toEqual({ Alice: 3, Bob: 4, Charlie: 5 });
+        const result = Logic.parsePlayerList('name,rating\r\nAlice,3\r\nBob,4');
+        expect(result.valid).toBe(true);
+        expect(result.names).toEqual(['Alice', 'Bob']);
+        expect(result.skills).toEqual({ Alice: 3, Bob: 4 });
     });
 
     test('handles non-numeric skill values by defaulting to 3', () => {
-        const result = Logic.parsePlayerList('Alice,abc');
+        const result = Logic.parsePlayerList('name,rating\nAlice,abc');
+        expect(result.valid).toBe(true);
         expect(result.skills.Alice).toBe(3);
+    });
+
+    test('handles header-only file (no players)', () => {
+        const result = Logic.parsePlayerList('name,rating');
+        expect(result.valid).toBe(true);
+        expect(result.names).toEqual([]);
     });
 });
 

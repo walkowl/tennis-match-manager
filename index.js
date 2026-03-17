@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 22:05';
+const APP_VERSION_DATE = '2026-03-17 22:11';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -344,6 +344,11 @@ function loadPlayersFromUrlInput() {
         .then(response => response.text())
         .then(text => {
             const parsed = Logic.parsePlayerList(text);
+            if (!parsed.valid) {
+                statusEl.style.color = '#dc3545';
+                statusEl.textContent = `❌ ${parsed.error}`;
+                return;
+            }
             if (parsed.names.length === 0) {
                 statusEl.style.color = '#dc3545';
                 statusEl.textContent = 'No players found at this URL.';
@@ -397,6 +402,11 @@ function getPlayerList() {
             .then(response => response.text())
             .then(text => {
                 const parsed = Logic.parsePlayerList(text);
+                if (!parsed.valid) {
+                    console.error('Invalid player file format:', parsed.error);
+                    savePlayersInStorage(players);
+                    return players;
+                }
                 if (overwritePlayers || !players) {
                     savePlayersInStorage(parsed.names);
                     saveSkillRatings(parsed.skills);

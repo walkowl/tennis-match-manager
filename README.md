@@ -45,11 +45,29 @@ Just open the app and add players manually via the Edit Mode.
 | **Sit out 2** | Skips the next two rounds |
 | **Inactive** | Excluded from matches until manually reactivated |
 
+## Player File Format
+
+Player files must be CSV format with a required header line:
+
+```csv
+name,rating
+Lukasz Walkow,5
+Andrus Tonismae,4
+Bob Bear
+```
+
+| Column | Required | Description |
+|--------|----------|-------------|
+| `name` | Yes | Player's full name |
+| `rating` | No | Skill rating 1-5 (1=weakest, 5=strongest, default: 3) |
+
+The header line (`name,rating` or just `name`) is **mandatory**. Files without the correct header will be rejected.
+
 ## URL Parameters
 
 | Parameter | Description | Example |
 |-----------|-------------|---------|
-| `players_url` | URL to a newline-separated player list | `?players_url=https://example.com/players.txt` |
+| `players_url` | URL to a CSV player list (see format above) | `?players_url=https://example.com/players.csv` |
 | `overwrite_players` | Force reload players from URL | `?players_url=...&overwrite_players=true` |
 
 ## Tech Stack

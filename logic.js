@@ -326,14 +326,28 @@ function shouldAutoResetTracking(lastMatchTimestamp, now, thresholdMs) {
 const AUTO_RESET_THRESHOLD_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 /**
- * Parse a player list text (newline-separated) into an array of player objects.
- * Each line can be "Name" or "Name,skill" where skill is 1-5 (default 5).
- * Returns { names: string[], skills: { name: number } }
+ * Parse a player list CSV text with required headers: name,rating
+ * Each data line: "Name,skill" where skill is 1-5 (default 3 if omitted).
+ * Returns { valid: true, names: string[], skills: { name: number } }
+ * or { valid: false, error: string } if headers are missing/invalid.
  */
 function parsePlayerList(text) {
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+    if (lines.length === 0) {
+        return { valid: false, error: 'File is empty.' };
+    }
+
+    // Check for required CSV header
+    const header = lines[0].toLowerCase();
+    const headerParts = header.split(',').map(h => h.trim());
+    if (headerParts[0] !== 'name' || (headerParts.length > 1 && headerParts[1] !== 'rating')) {
+        return { valid: false, error: 'Invalid file format. First line must be CSV header: name,rating' };
+    }
+
     const names = [];
     const skills = {};
-    text.split('\n').map(line => line.trim()).filter(line => line).forEach(line => {
+    // Skip header, parse data lines
+    lines.slice(1).forEach(line => {
         const parts = line.split(',');
         const name = parts[0].trim();
         const skill = parts.length > 1 ? parseInt(parts[1].trim(), 10) : 3;
@@ -342,7 +356,7 @@ function parsePlayerList(text) {
             skills[name] = (skill >= 1 && skill <= 5) ? skill : 3;
         }
     });
-    return { names, skills };
+    return { valid: true, names, skills };
 }
 
 /**
