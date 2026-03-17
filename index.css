@@ -146,30 +146,56 @@ html, body {
 }
 
 .load-players-control {
-    padding: 10px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 5px;
 }
 
 .load-players-control label {
-    font-size: 18px;
-    font-weight: bold;
+    font-size: 16px;
+    font-weight: 600;
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    color: #333;
 }
 
 .load-players-control input[type="text"] {
-    font-size: 16px;
+    font-size: 15px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.load-players-control .form-check {
+    margin-bottom: 15px;
+    padding-left: 30px;
+}
+
+.load-players-control .form-check-input {
+    width: 22px;
+    height: 22px;
+    margin-top: 2px;
+}
+
+.load-players-control .form-check-label {
+    font-size: 15px;
+    margin-left: 8px;
+    vertical-align: middle;
 }
 
 .load-players-control .btn {
-    min-width: 120px;
-    min-height: 44px;
+    min-width: 140px;
+    min-height: 46px;
     font-size: 16px;
+    border-radius: 6px;
 }
 
 #load-players-status {
     font-size: 14px;
-    padding: 8px;
-    border-radius: 4px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: #fff;
 }
 
 .font-scale-control {
