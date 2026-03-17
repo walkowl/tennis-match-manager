@@ -1,6 +1,7 @@
-const APP_VERSION_DATE = '2026-03-17 16:53';
+const APP_VERSION_DATE = '2026-03-17 21:11';
 
 let createMatchesButton = document.getElementById('create-matches');
+let isAnimating = false;
 let playerMatchCounts = {};
 let playerTeammatePairings = {};
 
@@ -32,6 +33,7 @@ function updateMatchTracking(matches) {
 }
 
 createMatchesButton.addEventListener('click', () => {
+    if (isAnimating) return;
     const savedSelectedPlayers = JSON.parse(localStorage.getItem('selectedPlayers')) || [];
     const sitoutPlayers = Logic.filterSitoutPlayers(savedSelectedPlayers);
     if (sitoutPlayers.length > 0) {
@@ -586,6 +588,8 @@ function buildReelNames(allPlayers, finalName, count) {
 }
 
 function animateMatchReveal(matches, restingPlayers, allPlayers) {
+    isAnimating = true;
+    createMatchesButton.disabled = true;
     const matchesList = document.getElementById('matches-list');
     matchesList.innerHTML = '';
 
@@ -717,6 +721,8 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
                             matchesList.appendChild(resting);
                         }
                         updateNoMatchesMessage();
+                        isAnimating = false;
+                        createMatchesButton.disabled = false;
                         setTimeout(createBouncingBalls, 300);
                     }
                     return;
