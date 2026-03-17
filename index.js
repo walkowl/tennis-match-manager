@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 21:42';
+const APP_VERSION_DATE = '2026-03-17 21:50';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -238,6 +238,61 @@ function getSkillRatings() {
 }
 
 
+function loadPlayersFromUrlInput() {
+    const urlInput = document.getElementById('players-url-input');
+    const overwrite = document.getElementById('overwrite-players-check').checked;
+    const statusEl = document.getElementById('load-players-status');
+    const url = urlInput.value.trim();
+
+    if (!url) {
+        statusEl.style.display = 'block';
+        statusEl.style.color = '#dc3545';
+        statusEl.textContent = 'Please enter a URL.';
+        return;
+    }
+
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#666';
+    statusEl.textContent = 'Loading...';
+
+    fetch(url)
+        .then(response => response.text())
+        .then(text => {
+            const parsed = Logic.parsePlayerList(text);
+            if (parsed.names.length === 0) {
+                statusEl.style.color = '#dc3545';
+                statusEl.textContent = 'No players found at this URL.';
+                return;
+            }
+            if (overwrite) {
+                savePlayersInStorage(parsed.names);
+                saveSkillRatings(parsed.skills);
+            } else {
+                // Merge: add new players only
+                let existing = getPlayerFromStorage() || [];
+                const existingSkills = getSkillRatings();
+                parsed.names.forEach((name, i) => {
+                    if (!existing.some(e => e.toLowerCase() === name.toLowerCase())) {
+                        existing.push(name);
+                    }
+                    existingSkills[name] = parsed.skills[name];
+                });
+                savePlayersInStorage(existing);
+                saveSkillRatings(existingSkills);
+            }
+            // Refresh display
+            const players = getPlayerFromStorage();
+            displayPlayers(players);
+            updatePlayerCount();
+            statusEl.style.color = '#198754';
+            statusEl.textContent = `✅ Loaded ${parsed.names.length} players${overwrite ? ' (overwritten)' : ' (merged)'}.`;
+        })
+        .catch(error => {
+            statusEl.style.color = '#dc3545';
+            statusEl.textContent = `❌ Failed to load: ${error.message}`;
+        });
+}
+
 function getPlayerList() {
     let defaultPlayers = ["Example player 1", "Example player 2", "Example player 3"];
     // Parse the URL parameters
@@ -348,6 +403,13 @@ function setupEventListeners() {
     });
     document.getElementById('font-increase').addEventListener('click', () => applyFontScale(fontScale + 10));
     document.getElementById('font-decrease').addEventListener('click', () => applyFontScale(fontScale - 10));
+    document.getElementById('load-players-btn').addEventListener('click', loadPlayersFromUrlInput);
+    // Pre-fill URL input from current query param if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentUrl = urlParams.get('players_url');
+    if (currentUrl) {
+        document.getElementById('players-url-input').value = currentUrl;
+    }
     clickSelectedPlayersListener();
 }
 

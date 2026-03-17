@@ -162,6 +162,17 @@
                         <button class="btn btn-outline-secondary" id="font-increase">+</button>
                     </div>
                 </div>
+                <hr>
+                <div class="load-players-control">
+                    <label>Load Players from URL</label>
+                    <input type="text" class="form-control" id="players-url-input" placeholder="https://example.com/players.txt">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="overwrite-players-check">
+                        <label class="form-check-label" for="overwrite-players-check">Overwrite existing players</label>
+                    </div>
+                    <button class="btn btn-primary mt-2" id="load-players-btn">Load Players</button>
+                    <div id="load-players-status" class="mt-2" style="display:none;"></div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

@@ -112,6 +112,33 @@ html, body {
     100% { transform: scale(1); color: inherit; }
 }
 
+.load-players-control {
+    padding: 10px 0;
+}
+
+.load-players-control label {
+    font-size: 18px;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.load-players-control input[type="text"] {
+    font-size: 16px;
+}
+
+.load-players-control .btn {
+    min-width: 120px;
+    min-height: 44px;
+    font-size: 16px;
+}
+
+#load-players-status {
+    font-size: 14px;
+    padding: 8px;
+    border-radius: 4px;
+}
+
 .font-scale-control {
     display: flex;
     align-items: center;
