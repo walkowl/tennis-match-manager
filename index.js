@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 15:26';
+const APP_VERSION_DATE = '2026-03-17 15:31';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
@@ -578,7 +578,6 @@ function playStopSound() {
 function animateMatchReveal(matches, restingPlayers, allPlayers) {
     const matchesList = document.getElementById('matches-list');
     matchesList.innerHTML = '';
-    updateNoMatchesMessage();
 
     const skillRatings = getSkillRatings();
 
@@ -620,15 +619,26 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
         match.appendChild(teamTwo);
         matchesList.appendChild(match);
 
+        // Initialize with random names so slots are visible immediately
+        [t1p1, t1p2, t2p1, t2p2].forEach(el => {
+            el.textContent = Logic.formatPlayerName(allPlayers[Math.floor(Math.random() * allPlayers.length)]);
+        });
+
         slots.push({ el: t1p1, finalName: matchData.teamOne[0] });
         slots.push({ el: t1p2, finalName: matchData.teamOne[1] });
         slots.push({ el: t2p1, finalName: matchData.teamTwo[0] });
         slots.push({ el: t2p2, finalName: matchData.teamTwo[1] });
     });
 
+    // Hide the "no matches" message now that elements are added
+    updateNoMatchesMessage();
+
+    // Scroll matches into view
+    matchesList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
     // Assign each slot a different stop time (staggered)
     const BASE_DURATION = 1500;  // minimum spin time ms
-    const STAGGER = 300;         // ms between each slot stopping
+    const STAGGER = Math.min(300, 2000 / Math.max(slots.length, 1)); // cap total stagger at ~2s
 
     // Shuffle slot stop order for excitement
     const stopOrder = slots.map((_, i) => i);
