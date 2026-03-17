@@ -112,6 +112,42 @@ html, body {
     100% { transform: scale(1); color: inherit; }
 }
 
+.font-scale-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+
+.font-scale-control label {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.font-scale-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.font-scale-buttons .btn {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+#font-scale-display {
+    font-size: 20px;
+    font-weight: bold;
+    min-width: 60px;
+    text-align: center;
+}
+
 .modal-footer .btn {
     min-width: 120px;
     min-height: 48px;

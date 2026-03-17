@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 21:11';
+const APP_VERSION_DATE = '2026-03-17 21:20';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -319,6 +319,18 @@ function displayPlayers(players) {
     addSelectedPlayers();
 }
 
+// Font scaling
+let fontScale = parseInt(localStorage.getItem('fontScale'), 10) || 100;
+applyFontScale(fontScale);
+
+function applyFontScale(scale) {
+    fontScale = Math.max(50, Math.min(200, scale));
+    document.documentElement.style.fontSize = fontScale + '%';
+    const display = document.getElementById('font-scale-display');
+    if (display) display.textContent = fontScale + '%';
+    localStorage.setItem('fontScale', fontScale.toString());
+}
+
 function setupEventListeners() {
     document.getElementById('add-new-player').addEventListener('click', openAddPlayerModal);
     document.getElementById('save-player').addEventListener('click', savePlayer);
@@ -327,6 +339,12 @@ function setupEventListeners() {
     document.getElementById('player-list-label').addEventListener('click', createBouncingBalls);
     document.getElementById('player-list-label').addEventListener('dblclick', showVersionInfo);
     document.getElementById('matches-list').addEventListener('dblclick', toggleSkillBadges);
+    document.getElementById('options-btn').addEventListener('click', () => {
+        const optionsModal = new bootstrap.Modal(document.getElementById('optionsModal'));
+        optionsModal.show();
+    });
+    document.getElementById('font-increase').addEventListener('click', () => applyFontScale(fontScale + 10));
+    document.getElementById('font-decrease').addEventListener('click', () => applyFontScale(fontScale - 10));
     clickSelectedPlayersListener();
 }
 
