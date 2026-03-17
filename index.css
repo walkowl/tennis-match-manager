@@ -167,25 +167,26 @@ html, body {
     margin-bottom: 12px;
 }
 
-.load-players-control .form-check {
+.load-players-control .overwrite-check {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 15px;
-    padding-left: 0;
 }
 
-.load-players-control .form-check-input {
+.load-players-control .overwrite-check input[type="checkbox"] {
     width: 22px;
     height: 22px;
     margin: 0;
     flex-shrink: 0;
+    cursor: pointer;
 }
 
-.load-players-control .form-check-label {
+.load-players-control .overwrite-check label {
     font-size: 15px;
     margin: 0;
     line-height: 22px;
+    cursor: pointer;
 }
 
 .load-players-control .btn {
