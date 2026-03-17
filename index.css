@@ -182,6 +182,12 @@ html, body {
     opacity: 1;
 }
 
+/* Prevent all browser zoom: pinch, double-tap */
+html {
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+}
+
 .label {
     text-align: center;
     padding: 10px;
