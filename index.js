@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 21:57';
+const APP_VERSION_DATE = '2026-03-17 22:05';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -295,24 +295,52 @@ function checkForUpdates() {
     }
 }
 
+function normalizeUrl(input) {
+    let url = input.trim().toLowerCase();
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+    }
+    return url;
+}
+
+function fetchWithProtocolFallback(url) {
+    return fetch(url).then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response;
+    }).catch(err => {
+        // If https failed and we added it, try http
+        if (url.startsWith('https://')) {
+            const httpUrl = url.replace('https://', 'http://');
+            return fetch(httpUrl).then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response;
+            });
+        }
+        throw err;
+    });
+}
+
 function loadPlayersFromUrlInput() {
     const urlInput = document.getElementById('players-url-input');
     const overwrite = document.getElementById('overwrite-players-check').checked;
     const statusEl = document.getElementById('load-players-status');
-    const url = urlInput.value.trim();
+    const rawUrl = urlInput.value.trim();
 
-    if (!url) {
+    if (!rawUrl) {
         statusEl.style.display = 'block';
         statusEl.style.color = '#dc3545';
         statusEl.textContent = 'Please enter a URL.';
         return;
     }
 
+    const url = normalizeUrl(rawUrl);
+    urlInput.value = url; // Show normalized URL back to user
+
     statusEl.style.display = 'block';
     statusEl.style.color = '#666';
     statusEl.textContent = 'Loading...';
 
-    fetch(url)
+    fetchWithProtocolFallback(url)
         .then(response => response.text())
         .then(text => {
             const parsed = Logic.parsePlayerList(text);
