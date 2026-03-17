@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 16:34';
+const APP_VERSION_DATE = '2026-03-17 16:53';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
@@ -635,7 +635,6 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
     });
 
     updateNoMatchesMessage();
-    matchesList.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     // Timing: 5-7s total
     const FAST_PHASE = 3500;
