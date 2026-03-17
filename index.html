@@ -114,10 +114,13 @@
             </div>
             <div class="modal-body">
                 <input type="text" class="form-control" id="player-name-input" placeholder="Player Name">
-                <div class="mt-2">
-                    <label for="player-rating-input" class="form-label">Skill Rating (1-5)</label>
-                    <input type="number" class="form-control" id="player-rating-input" min="1" max="5" value="3" style="width: 80px;">
-                </div>
+                <details class="mt-2">
+                    <summary style="font-size:14px; color:#666; cursor:pointer;">Optional</summary>
+                    <div class="mt-2">
+                        <label for="player-rating-input" class="form-label">Skill Rating (1-5)</label>
+                        <input type="number" class="form-control" id="player-rating-input" min="1" max="5" value="3" style="width: 80px;">
+                    </div>
+                </details>
                 <input type="hidden" id="editing-player-index">
             </div>
             <div class="modal-footer">
