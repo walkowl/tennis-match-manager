@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-17 15:35';
+const APP_VERSION_DATE = '2026-03-17 15:41';
 
 let createMatchesButton = document.getElementById('create-matches');
 let playerMatchCounts = {};
@@ -575,14 +575,23 @@ function playStopSound() {
     osc.stop(audioCtx.currentTime + 0.2);
 }
 
+function buildReelNames(allPlayers, finalName, count) {
+    // Build a list of random names ending with the final name
+    const names = [];
+    for (let i = 0; i < count; i++) {
+        names.push(allPlayers[Math.floor(Math.random() * allPlayers.length)]);
+    }
+    names.push(finalName); // last name is always the final one
+    return names;
+}
+
 function animateMatchReveal(matches, restingPlayers, allPlayers) {
     const matchesList = document.getElementById('matches-list');
     matchesList.innerHTML = '';
 
     const skillRatings = getSkillRatings();
+    const reels = [];
 
-    // Build the match elements with placeholder spinning slots
-    const slots = []; // { element, finalName, court }
     matches.forEach(matchData => {
         const match = document.createElement('div');
         match.classList.add('match');
@@ -593,149 +602,139 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
 
         const teamOne = document.createElement('div');
         teamOne.classList.add('team');
-        const t1p1 = document.createElement('div');
-        t1p1.classList.add('slot-spin');
-        const t1p2 = document.createElement('div');
-        t1p2.classList.add('slot-spin');
-        teamOne.appendChild(t1p1);
-        teamOne.appendChild(t1p2);
-
         const versus = document.createElement('div');
         versus.classList.add('versus');
         versus.textContent = 'vs';
-
         const teamTwo = document.createElement('div');
         teamTwo.classList.add('team');
-        const t2p1 = document.createElement('div');
-        t2p1.classList.add('slot-spin');
-        const t2p2 = document.createElement('div');
-        t2p2.classList.add('slot-spin');
-        teamTwo.appendChild(t2p1);
-        teamTwo.appendChild(t2p2);
+
+        const playerNames = [
+            matchData.teamOne[0], matchData.teamOne[1],
+            matchData.teamTwo[0], matchData.teamTwo[1]
+        ];
+        const teams = [teamOne, teamOne, teamTwo, teamTwo];
+
+        playerNames.forEach((finalName, idx) => {
+            const viewport = document.createElement('div');
+            viewport.classList.add('reel-viewport');
+
+            const strip = document.createElement('div');
+            strip.classList.add('reel-strip');
+
+            viewport.appendChild(strip);
+            teams[idx].appendChild(viewport);
+
+            reels.push({ viewport, strip, finalName });
+        });
 
         match.appendChild(courtNumber);
         match.appendChild(teamOne);
         match.appendChild(versus);
         match.appendChild(teamTwo);
         matchesList.appendChild(match);
-
-        // Initialize with random names so slots are visible immediately
-        [t1p1, t1p2, t2p1, t2p2].forEach(el => {
-            el.textContent = Logic.formatPlayerName(allPlayers[Math.floor(Math.random() * allPlayers.length)]);
-        });
-
-        slots.push({ el: t1p1, finalName: matchData.teamOne[0] });
-        slots.push({ el: t1p2, finalName: matchData.teamOne[1] });
-        slots.push({ el: t2p1, finalName: matchData.teamTwo[0] });
-        slots.push({ el: t2p2, finalName: matchData.teamTwo[1] });
     });
 
-    // Hide the "no matches" message now that elements are added
     updateNoMatchesMessage();
-
-    // Scroll matches into view
     matchesList.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    // Timing: total animation 3-6s
-    // Most slots stop in first 2s, last 3 slots get dramatic slowdown
-    const FAST_PHASE = 2000;   // first slots stop within 2s
-    const DRAMA_EXTRA = 3000;  // last few slots get extra time
-    const DRAMA_COUNT = 3;     // how many slots get the dramatic treatment
+    // Timing: 5-7s total
+    const FAST_PHASE = 3500;
+    const DRAMA_EXTRA = 3500;
+    const DRAMA_COUNT = 3;
 
-    // Shuffle slot stop order for excitement
-    const stopOrder = slots.map((_, i) => i);
+    const stopOrder = reels.map((_, i) => i);
     Logic.shuffleArray(stopOrder);
 
-    const normalCount = Math.max(slots.length - DRAMA_COUNT, 0);
+    const normalCount = Math.max(reels.length - DRAMA_COUNT, 0);
     const normalStagger = normalCount > 0 ? FAST_PHASE / normalCount : 0;
 
-    slots.forEach((slot, i) => {
+    reels.forEach((reel, i) => {
         const stopIndex = stopOrder.indexOf(i);
         if (stopIndex < normalCount) {
-            // Normal slots: stop quickly in first 2s
-            slot.stopTime = 500 + (stopIndex * normalStagger);
-            slot.dramatic = false;
+            reel.stopTime = 2000 + (stopIndex * normalStagger);
+            reel.dramatic = false;
         } else {
-            // Dramatic slots: spread over remaining time with extra drama
             const dramaIndex = stopIndex - normalCount;
-            slot.stopTime = FAST_PHASE + 500 + (dramaIndex * (DRAMA_EXTRA / DRAMA_COUNT));
-            slot.dramatic = true;
+            reel.stopTime = FAST_PHASE + 2000 + (dramaIndex * (DRAMA_EXTRA / DRAMA_COUNT));
+            reel.dramatic = true;
         }
-        // Build a "nearby names" list for dramatic back-and-forth
-        slot.nearbyNames = [slot.finalName];
-        for (let n = 0; n < 4; n++) {
-            slot.nearbyNames.push(allPlayers[Math.floor(Math.random() * allPlayers.length)]);
-        }
+
+        // More names for reels that spin longer
+        const nameCount = Math.floor(reel.stopTime / 60);
+        reel.names = buildReelNames(allPlayers, reel.finalName, nameCount);
+
+        // Build the strip with all name elements
+        reel.names.forEach(name => {
+            const nameEl = document.createElement('div');
+            nameEl.classList.add('reel-name');
+            nameEl.textContent = Logic.formatPlayerName(name);
+            reel.strip.appendChild(nameEl);
+        });
     });
 
-    const startTime = Date.now();
-
-    function tick() {
-        const elapsed = Date.now() - startTime;
-        let allDone = true;
-
-        slots.forEach(slot => {
-            if (slot.stopped) return;
-
-            if (elapsed >= slot.stopTime) {
-                // Stop on final name
-                slot.el.innerHTML = formatPlayerNameWithSkill(slot.finalName, skillRatings);
-                slot.el.classList.remove('slot-spin');
-                slot.el.classList.add('slot-landed');
-                slot.stopped = true;
-                playStopSound();
-                return;
-            }
-
-            allDone = false;
-
-            const timeLeft = slot.stopTime - elapsed;
-            const progress = 1 - (timeLeft / slot.stopTime);
-
-            // Calculate interval: starts fast (40ms), slows dramatically near the end
-            let interval;
-            if (slot.dramatic && progress > 0.6) {
-                // Dramatic phase: very slow, 300-800ms between ticks
-                const dramaProgress = (progress - 0.6) / 0.4; // 0 to 1 within drama zone
-                interval = 300 + dramaProgress * 500;
-            } else {
-                // Normal phase: 40-120ms
-                interval = 40 + progress * 80;
-            }
-
-            if (!slot.lastTick || (elapsed - slot.lastTick) >= interval) {
-                let name;
-                if (slot.dramatic && progress > 0.7) {
-                    // Back-and-forth between final name and nearby names
-                    const nearIdx = Math.floor(Math.random() * slot.nearbyNames.length);
-                    name = slot.nearbyNames[nearIdx];
-                } else {
-                    name = allPlayers[Math.floor(Math.random() * allPlayers.length)];
-                }
-                slot.el.textContent = Logic.formatPlayerName(name);
-                slot.lastTick = elapsed;
-                // Lower pitch as it slows down
-                const pitch = slot.dramatic && progress > 0.6 ? 200 : 300;
-                playTick(pitch);
-            }
+    // Start all reels spinning after a brief moment for DOM to render
+    requestAnimationFrame(() => {
+        reels.forEach(reel => {
+            const nameHeight = reel.viewport.offsetHeight || 28;
+            const totalScroll = nameHeight * (reel.names.length - 1);
+            reel.strip.style.transition = `transform ${reel.stopTime}ms cubic-bezier(0.15, 0.0, 0.15, 1.0)`;
+            reel.strip.style.transform = `translateY(-${totalScroll}px)`;
         });
 
-        if (!allDone) {
-            requestAnimationFrame(tick);
-        } else {
-            // All slots stopped - show resting players and bouncing balls
-            if (restingPlayers && restingPlayers.length > 0) {
-                const resting = document.createElement('div');
-                resting.classList.add('resting');
-                resting.textContent = `Resting: ${restingPlayers.join(', ')}`;
-                matchesList.appendChild(resting);
-            }
-            updateNoMatchesMessage();
-            setTimeout(createBouncingBalls, 300);
-        }
-    }
+        // Set up tick sounds and landing events
+        const startTime = Date.now();
+        let lastTickTime = 0;
+        let stoppedCount = 0;
 
-    requestAnimationFrame(tick);
+        function tickLoop() {
+            const elapsed = Date.now() - startTime;
+            let anySpinning = false;
+
+            reels.forEach(reel => {
+                if (reel.stopped) return;
+
+                if (elapsed >= reel.stopTime) {
+                    reel.stopped = true;
+                    stoppedCount++;
+                    // Replace strip with final styled name
+                    reel.viewport.innerHTML = '';
+                    const finalEl = document.createElement('div');
+                    finalEl.classList.add('reel-name', 'slot-landed');
+                    finalEl.innerHTML = formatPlayerNameWithSkill(reel.finalName, skillRatings);
+                    reel.viewport.appendChild(finalEl);
+                    playStopSound();
+
+                    if (stoppedCount === reels.length) {
+                        // All done
+                        if (restingPlayers && restingPlayers.length > 0) {
+                            const resting = document.createElement('div');
+                            resting.classList.add('resting');
+                            resting.textContent = `Resting: ${restingPlayers.join(', ')}`;
+                            matchesList.appendChild(resting);
+                        }
+                        updateNoMatchesMessage();
+                        setTimeout(createBouncingBalls, 300);
+                    }
+                    return;
+                }
+
+                anySpinning = true;
+            });
+
+            // Play tick sounds at intervals
+            if (anySpinning) {
+                const tickInterval = elapsed < 2000 ? 80 : 80 + ((elapsed - 2000) / 50);
+                if (elapsed - lastTickTime >= tickInterval) {
+                    const pitch = elapsed > 4000 ? 200 : 300;
+                    playTick(pitch);
+                    lastTickTime = elapsed;
+                }
+                requestAnimationFrame(tickLoop);
+            }
+        }
+
+        requestAnimationFrame(tickLoop);
+    });
 }
 
 function showVersionInfo() {
