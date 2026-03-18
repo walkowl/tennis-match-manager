@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-19 06:03';
+const APP_VERSION_DATE = '2026-03-19 06:08';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -776,35 +776,50 @@ function playTick() {
     noise.stop(now + duration);
 }
 
-// Final landing sound — an emphasized version of the rolling click
+// Final landing sound — emphasized click with a snap on top
 function playStopSound() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const now = audioCtx.currentTime;
-    const duration = 0.05;
 
-    // Same noise-based click as the spinning tick, but louder and slightly longer
-    const bufferSize = Math.ceil(audioCtx.sampleRate * duration);
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    // Main click — same character as rolling, but punchier
+    const mainDur = 0.055;
+    const mainBuf = audioCtx.createBuffer(1, Math.ceil(audioCtx.sampleRate * mainDur), audioCtx.sampleRate);
+    const mainData = mainBuf.getChannelData(0);
+    for (let i = 0; i < mainData.length; i++) mainData[i] = Math.random() * 2 - 1;
+    const mainNoise = audioCtx.createBufferSource();
+    mainNoise.buffer = mainBuf;
+    const mainFilter = audioCtx.createBiquadFilter();
+    mainFilter.type = 'bandpass';
+    mainFilter.frequency.value = 1900;
+    mainFilter.Q.value = 1.5;
+    const mainGain = audioCtx.createGain();
+    mainGain.gain.setValueAtTime(0.38, now);
+    mainGain.gain.exponentialRampToValueAtTime(0.001, now + mainDur);
+    mainNoise.connect(mainFilter);
+    mainFilter.connect(mainGain);
+    mainGain.connect(audioCtx.destination);
+    mainNoise.start(now);
+    mainNoise.stop(now + mainDur);
 
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 1900;
-    filter.Q.value = 1.5;
-
-    const gain = audioCtx.createGain();
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(audioCtx.destination);
-    noise.start(now);
-    noise.stop(now + duration);
+    // High snap layer — brief bright edge for extra click
+    const snapDur = 0.015;
+    const snapBuf = audioCtx.createBuffer(1, Math.ceil(audioCtx.sampleRate * snapDur), audioCtx.sampleRate);
+    const snapData = snapBuf.getChannelData(0);
+    for (let i = 0; i < snapData.length; i++) snapData[i] = Math.random() * 2 - 1;
+    const snapNoise = audioCtx.createBufferSource();
+    snapNoise.buffer = snapBuf;
+    const snapFilter = audioCtx.createBiquadFilter();
+    snapFilter.type = 'bandpass';
+    snapFilter.frequency.value = 4000;
+    snapFilter.Q.value = 1;
+    const snapGain = audioCtx.createGain();
+    snapGain.gain.setValueAtTime(0.1, now);
+    snapGain.gain.exponentialRampToValueAtTime(0.001, now + snapDur);
+    snapNoise.connect(snapFilter);
+    snapFilter.connect(snapGain);
+    snapGain.connect(audioCtx.destination);
+    snapNoise.start(now);
+    snapNoise.stop(now + snapDur);
 }
 
 function buildReelNames(allPlayers, finalName, count) {
