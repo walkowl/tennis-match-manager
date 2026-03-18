@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-18 14:25';
+const APP_VERSION_DATE = '2026-03-18 15:34';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -738,34 +738,76 @@ function saveSelectedPredefinedPlayers() {
 }
 
 
-// Audio context for slot machine clicking sound
+// Audio context for wheel-of-fortune style clicking sound
 let audioCtx = null;
-function playTick(pitch) {
+
+// Create a short burst of filtered noise to simulate a mechanical flapper click
+function playTick() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
+    const now = audioCtx.currentTime;
+    const duration = 0.03 + Math.random() * 0.015; // 30-45ms click
+
+    // White noise buffer
+    const bufferSize = Math.ceil(audioCtx.sampleRate * duration);
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1);
+    }
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+
+    // Bandpass filter to shape the click — like a wooden peg being struck
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 1800 + Math.random() * 400;
+    filter.Q.value = 1.5;
+
+    // Sharp envelope for a snappy click
     const gain = audioCtx.createGain();
-    osc.connect(gain);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    noise.connect(filter);
+    filter.connect(gain);
     gain.connect(audioCtx.destination);
-    osc.frequency.value = (pitch || 300) + Math.random() * 100;
-    osc.type = 'square';
-    gain.gain.value = 0.04;
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
-    osc.start(audioCtx.currentTime);
-    osc.stop(audioCtx.currentTime + 0.06);
+    noise.start(now);
+    noise.stop(now + duration);
 }
 
+// Final landing sound — a slightly louder, lower "clunk" with a brief resonance
 function playStopSound() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
+    const now = audioCtx.currentTime;
+    const duration = 0.12;
+
+    // Noise burst for the impact
+    const bufferSize = Math.ceil(audioCtx.sampleRate * duration);
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1);
+    }
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+
+    // Lower bandpass for a deeper "clunk"
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 800;
+    filter.Q.value = 2;
+
     const gain = audioCtx.createGain();
-    osc.connect(gain);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    noise.connect(filter);
+    filter.connect(gain);
     gain.connect(audioCtx.destination);
-    osc.frequency.value = 600;
-    osc.type = 'sine';
-    gain.gain.value = 0.12;
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-    osc.start(audioCtx.currentTime);
-    osc.stop(audioCtx.currentTime + 0.2);
+    noise.start(now);
+    noise.stop(now + duration);
 }
 
 function buildReelNames(allPlayers, finalName, count) {
@@ -943,8 +985,7 @@ function animateMatchReveal(matches, restingPlayers, allPlayers) {
             if (anySpinning) {
                 const tickInterval = elapsed < 2000 ? 80 : 80 + ((elapsed - 2000) / 50);
                 if (elapsed - lastTickTime >= tickInterval) {
-                    const pitch = elapsed > 4000 ? 200 : 300;
-                    playTick(pitch);
+                    playTick();
                     lastTickTime = elapsed;
                 }
                 requestAnimationFrame(tickLoop);
