@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-19 05:32';
+const APP_VERSION_DATE = '2026-03-19 06:03';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -776,42 +776,35 @@ function playTick() {
     noise.stop(now + duration);
 }
 
-// Final landing sound — a soft pop with a touch of click when a name locks in
+// Final landing sound — an emphasized version of the rolling click
 function playStopSound() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const now = audioCtx.currentTime;
+    const duration = 0.05;
 
-    // Low sine pop — the body of the sound
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(180, now);
-    const oscGain = audioCtx.createGain();
-    oscGain.gain.setValueAtTime(0.18, now);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-    osc.connect(oscGain);
-    oscGain.connect(audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + 0.06);
-
-    // Tiny noise click on top for texture
-    const bufferSize = Math.ceil(audioCtx.sampleRate * 0.02);
+    // Same noise-based click as the spinning tick, but louder and slightly longer
+    const bufferSize = Math.ceil(audioCtx.sampleRate * duration);
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
     const noise = audioCtx.createBufferSource();
     noise.buffer = buffer;
+
     const filter = audioCtx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.value = 2500;
-    filter.Q.value = 1;
-    const noiseGain = audioCtx.createGain();
-    noiseGain.gain.setValueAtTime(0.08, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+    filter.frequency.value = 1900;
+    filter.Q.value = 1.5;
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
     noise.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(audioCtx.destination);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
     noise.start(now);
-    noise.stop(now + 0.02);
+    noise.stop(now + duration);
 }
 
 function buildReelNames(allPlayers, finalName, count) {
