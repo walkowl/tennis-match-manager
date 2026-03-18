@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-18 15:34';
+const APP_VERSION_DATE = '2026-03-19 04:51';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -776,38 +776,27 @@ function playTick() {
     noise.stop(now + duration);
 }
 
-// Final landing sound — a slightly louder, lower "clunk" with a brief resonance
+// Final landing sound — a gentle "ding" when a name locks in
 function playStopSound() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const now = audioCtx.currentTime;
-    const duration = 0.12;
+    const duration = 0.35;
 
-    // Noise burst for the impact
-    const bufferSize = Math.ceil(audioCtx.sampleRate * duration);
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-        data[i] = (Math.random() * 2 - 1);
-    }
+    // Soft sine tone for a pleasant bell-like ding
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, now); // A5 note — bright but not harsh
+    osc.frequency.exponentialRampToValueAtTime(660, now + duration); // slight pitch drop for warmth
 
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-
-    // Lower bandpass for a deeper "clunk"
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 800;
-    filter.Q.value = 2;
-
+    // Gentle volume envelope — soft attack, smooth fade out
     const gain = audioCtx.createGain();
-    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.setValueAtTime(0.08, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    noise.connect(filter);
-    filter.connect(gain);
+    osc.connect(gain);
     gain.connect(audioCtx.destination);
-    noise.start(now);
-    noise.stop(now + duration);
+    osc.start(now);
+    osc.stop(now + duration);
 }
 
 function buildReelNames(allPlayers, finalName, count) {
