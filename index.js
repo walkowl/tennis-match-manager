@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-19 04:51';
+const APP_VERSION_DATE = '2026-03-19 04:56';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -776,21 +776,19 @@ function playTick() {
     noise.stop(now + duration);
 }
 
-// Final landing sound — a gentle "ding" when a name locks in
+// Final landing sound — a soft "pop" when a name locks in
 function playStopSound() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const now = audioCtx.currentTime;
-    const duration = 0.35;
+    const duration = 0.04;
 
-    // Soft sine tone for a pleasant bell-like ding
+    // Brief low sine burst for a gentle pop/boop
     const osc = audioCtx.createOscillator();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, now); // A5 note — bright but not harsh
-    osc.frequency.exponentialRampToValueAtTime(660, now + duration); // slight pitch drop for warmth
+    osc.frequency.setValueAtTime(150, now);
 
-    // Gentle volume envelope — soft attack, smooth fade out
     const gain = audioCtx.createGain();
-    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.setValueAtTime(0.12, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
     osc.connect(gain);
