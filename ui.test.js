@@ -396,6 +396,238 @@ describe('Zoom Prevention', () => {
     });
 });
 
+describe('Player Status Cycling', () => {
+    test('clicking a player cycles through sitout-1 class', async () => {
+        await setupPlayersDirectly(page, 2);
+        // Click the first selected player
+        await page.click('#selected-players .selected-player');
+        const hasSitout1 = await page.$eval('#selected-players .selected-player', el =>
+            el.classList.contains('sitout-1')
+        );
+        expect(hasSitout1).toBe(true);
+    });
+
+    test('clicking again cycles to sitout-2', async () => {
+        await setupPlayersDirectly(page, 2);
+        const firstPlayer = await page.$('#selected-players .selected-player');
+        await firstPlayer.click();
+        await firstPlayer.click();
+        const hasSitout2 = await page.$eval('#selected-players .selected-player', el =>
+            el.classList.contains('sitout-2')
+        );
+        expect(hasSitout2).toBe(true);
+    });
+
+    test('clicking again cycles to inactive', async () => {
+        await setupPlayersDirectly(page, 2);
+        const firstPlayer = await page.$('#selected-players .selected-player');
+        await firstPlayer.click();
+        await firstPlayer.click();
+        await firstPlayer.click();
+        const hasInactive = await page.$eval('#selected-players .selected-player', el =>
+            el.classList.contains('inactive')
+        );
+        expect(hasInactive).toBe(true);
+    });
+
+    test('clicking again cycles back to active (no status class)', async () => {
+        await setupPlayersDirectly(page, 2);
+        const firstPlayer = await page.$('#selected-players .selected-player');
+        await firstPlayer.click();
+        await firstPlayer.click();
+        await firstPlayer.click();
+        await firstPlayer.click();
+        const classes = await page.$eval('#selected-players .selected-player', el => ({
+            sitout1: el.classList.contains('sitout-1'),
+            sitout2: el.classList.contains('sitout-2'),
+            inactive: el.classList.contains('inactive'),
+        }));
+        expect(classes.sitout1).toBe(false);
+        expect(classes.sitout2).toBe(false);
+        expect(classes.inactive).toBe(false);
+    });
+
+    test('inactive players are excluded from player count', async () => {
+        await setupPlayersDirectly(page, 2);
+        // Make first player inactive (3 clicks)
+        const firstPlayer = await page.$('#selected-players .selected-player');
+        await firstPlayer.click();
+        await firstPlayer.click();
+        await firstPlayer.click();
+        const count = await page.$eval('#player-count', el => el.textContent);
+        expect(count).toBe('(1)');
+    });
+
+    test('sitout state persists in localStorage', async () => {
+        await setupPlayersDirectly(page, 2);
+        await page.click('#selected-players .selected-player');
+        const stored = await page.evaluate(() => {
+            const players = JSON.parse(localStorage.getItem('selectedPlayers'));
+            return players[0].sitout;
+        });
+        expect(stored).toBe(1);
+    });
+});
+
+describe('Font Scale Bounds', () => {
+    test('font scale does not go below 50%', async () => {
+        await page.click('#options-btn');
+        await page.waitForSelector('#optionsModal.show', { timeout: 2000 });
+        // Click decrease many times
+        for (let i = 0; i < 10; i++) await page.click('#font-decrease');
+        const scale = await page.$eval('#font-scale-display', el => el.textContent);
+        expect(scale).toBe('50%');
+    });
+
+    test('font scale does not go above 200%', async () => {
+        await page.click('#options-btn');
+        await page.waitForSelector('#optionsModal.show', { timeout: 2000 });
+        for (let i = 0; i < 20; i++) await page.click('#font-increase');
+        const scale = await page.$eval('#font-scale-display', el => el.textContent);
+        expect(scale).toBe('200%');
+    });
+
+    test('font scale persists across page reload', async () => {
+        await page.click('#options-btn');
+        await page.waitForSelector('#optionsModal.show', { timeout: 2000 });
+        await page.click('#font-increase');
+        await page.click('#font-increase');
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        await new Promise(r => setTimeout(r, 300));
+        const fontSize = await page.evaluate(() =>
+            document.documentElement.style.fontSize
+        );
+        expect(fontSize).toBe('120%');
+    });
+});
+
+describe('Skill Badges', () => {
+    test('skill badges are hidden by default (transparent)', async () => {
+        await setupPlayersDirectly(page, 4);
+        await page.click('#create-matches');
+        await page.waitForFunction(
+            () => document.querySelectorAll('#matches-list .match').length > 0,
+            { timeout: 15000 }
+        );
+        const badge = await page.$('.skill-badge');
+        if (badge) {
+            const color = await page.$eval('.skill-badge', el =>
+                window.getComputedStyle(el).color
+            );
+            // Should be transparent (rgba(0,0,0,0)) or the transparent keyword
+            expect(color).toMatch(/transparent|rgba\(0,\s*0,\s*0,\s*0\)/);
+        }
+    });
+});
+
+describe('Version Info', () => {
+    test('version-info element exists', async () => {
+        const exists = await page.$('#version-info');
+        expect(exists).toBeTruthy();
+    });
+
+    test('version-info is not visible initially', async () => {
+        const hasVisible = await page.$eval('#version-info', el =>
+            el.classList.contains('visible')
+        );
+        expect(hasVisible).toBe(false);
+    });
+});
+
+describe('Player Edit Modal', () => {
+    test('player edit modal contains rating input', async () => {
+        const exists = await page.$('#player-rating-input');
+        expect(exists).toBeTruthy();
+    });
+
+    test('rating input is inside a collapsible Optional section', async () => {
+        const isInDetails = await page.evaluate(() => {
+            const input = document.getElementById('player-rating-input');
+            return input?.closest('details') !== null;
+        });
+        expect(isInDetails).toBe(true);
+    });
+
+    test('rating input defaults to 3', async () => {
+        const value = await page.$eval('#player-rating-input', el => el.value);
+        expect(value).toBe('3');
+    });
+});
+
+describe('Matches Persistence', () => {
+    test('matches are restored on page reload', async () => {
+        await setupPlayersDirectly(page, 4);
+        await page.click('#create-matches');
+        await page.waitForFunction(
+            () => document.querySelectorAll('#matches-list .match').length > 0,
+            { timeout: 15000 }
+        );
+        // Reload
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        await new Promise(r => setTimeout(r, 500));
+        const matchesCount = await page.$$eval('#matches-list .match', els => els.length);
+        expect(matchesCount).toBe(1);
+    });
+});
+
+describe('Match Integrity', () => {
+    test('each match has exactly 4 unique players', async () => {
+        await setupPlayersDirectly(page, 8);
+        await page.click('#create-matches');
+        await page.waitForFunction(
+            () => document.querySelectorAll('#matches-list .match').length > 0,
+            { timeout: 15000 }
+        );
+        const data = await page.evaluate(() =>
+            JSON.parse(localStorage.getItem('matchesData'))
+        );
+        data.matches.forEach(match => {
+            const allPlayers = [...match.teamOne, ...match.teamTwo];
+            expect(allPlayers).toHaveLength(4);
+            // No duplicates
+            expect(new Set(allPlayers).size).toBe(4);
+        });
+        // No player appears on multiple courts
+        const allPlaying = data.matches.flatMap(m => [...m.teamOne, ...m.teamTwo]);
+        expect(new Set(allPlaying).size).toBe(allPlaying.length);
+    });
+});
+
+describe('Clear Tracking', () => {
+    test('Clear tracking button opens confirmation modal', async () => {
+        await page.click('#clear-tracking');
+        await page.waitForSelector('#clearTrackingModal.show', { timeout: 2000 });
+        const isVisible = await page.$eval('#clearTrackingModal', el =>
+            el.classList.contains('show')
+        );
+        expect(isVisible).toBe(true);
+    });
+});
+
+describe('Bottom Button Bar', () => {
+    test('all three bottom buttons are present', async () => {
+        const buttons = await page.evaluate(() => ({
+            selectPlayers: !!document.getElementById('add-player'),
+            options: !!document.getElementById('options-btn'),
+            createMatches: !!document.getElementById('create-matches'),
+        }));
+        expect(buttons.selectPlayers).toBe(true);
+        expect(buttons.options).toBe(true);
+        expect(buttons.createMatches).toBe(true);
+    });
+
+    test('buttons have visible text', async () => {
+        const texts = await page.evaluate(() => ({
+            selectPlayers: document.getElementById('add-player').textContent.trim(),
+            options: document.getElementById('options-btn').textContent.trim(),
+            createMatches: document.getElementById('create-matches').textContent.trim(),
+        }));
+        expect(texts.selectPlayers).toContain('Select players');
+        expect(texts.options).toContain('Options');
+        expect(texts.createMatches).toContain('Create matches');
+    });
+});
+
 describe('UI Layout', () => {
     test('modal buttons have minimum touch-friendly size', async () => {
         await page.click('#add-player');
