@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-18 11:02';
+const APP_VERSION_DATE = '2026-03-18 14:12';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -477,7 +477,7 @@ applyFontScale(fontScale);
 
 function applyFontScale(scale) {
     fontScale = Math.max(50, Math.min(200, scale));
-    document.documentElement.style.fontSize = fontScale + '%';
+    document.documentElement.style.setProperty('--font-scale', (fontScale / 100).toString());
     const display = document.getElementById('font-scale-display');
     if (display) display.textContent = fontScale + '%';
     localStorage.setItem('fontScale', fontScale.toString());

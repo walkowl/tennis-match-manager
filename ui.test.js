@@ -200,10 +200,10 @@ describe('Options Modal', () => {
         await page.click('#options-btn');
         await page.waitForSelector('#optionsModal.show', { timeout: 2000 });
         await page.click('#font-increase');
-        const fontSize = await page.evaluate(() =>
-            document.documentElement.style.fontSize
+        const fontScale = await page.evaluate(() =>
+            document.documentElement.style.getPropertyValue('--font-scale').trim()
         );
-        expect(fontSize).toBe('110%');
+        expect(fontScale).toBe('1.1');
     });
 
     test('font scale persists in localStorage', async () => {
@@ -494,10 +494,10 @@ describe('Font Scale Bounds', () => {
         await page.click('#font-increase');
         await page.reload({ waitUntil: 'domcontentloaded' });
         await new Promise(r => setTimeout(r, 300));
-        const fontSize = await page.evaluate(() =>
-            document.documentElement.style.fontSize
+        const fontScale = await page.evaluate(() =>
+            document.documentElement.style.getPropertyValue('--font-scale').trim()
         );
-        expect(fontSize).toBe('120%');
+        expect(fontScale).toBe('1.2');
     });
 });
 

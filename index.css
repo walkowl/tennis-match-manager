@@ -58,7 +58,12 @@ body::before {
     font-family: "Lato-Bold", sans-serif;
     font-weight: 700;
     font-style: normal;
-    font-size: 1.09em;
+}
+
+html {
+    /* Responsive base font size: scales from ~14px on small phones to ~18px on desktops.
+       The --font-scale custom property (set by JS) allows manual adjustment on top. */
+    font-size: calc(clamp(0.875rem, 0.75rem + 0.5vw, 1.125rem) * var(--font-scale, 1));
 }
 
 html, body {
@@ -290,7 +295,7 @@ html {
 .label {
     text-align: center;
     padding: 10px;
-    font-size: 1.7em;
+    font-size: 1.7rem;
 }
 
 .main {
@@ -343,8 +348,8 @@ html {
     align-items: center;
     height: 100%;
     text-align: center;
-    font-size: 1.5em; /* Adjust font size as needed */
-    color: var(--oxford-blue); /* Adjust text color as needed */
+    font-size: 1.5rem;
+    color: var(--oxford-blue);
 }
 
 .matches-list-label {
@@ -373,15 +378,15 @@ html {
 }
 
 .btn-big {
-    font-size: 1.5em !important;
+    font-size: 1.5rem !important;
 }
 
 .inactivePlayers {
-    font-size: 1.4em !important;
+    font-size: 1.4rem !important;
 }
 
 .btn-mid {
-    font-size: 1.15em !important;
+    font-size: 1.15rem !important;
 }
 
 #selected-players .selected-player.inactive {
@@ -402,7 +407,7 @@ html {
     content: "1";
     background-color: #444;
     color: #fff;
-    font-size: 1.1em;
+    font-size: 1.1rem;
     border-radius: 3px;
     padding: 2px 8px;
     position: absolute;
@@ -424,7 +429,7 @@ html {
     content: "2";
     background-color: #444;
     color: #fff;
-    font-size: 1.1em;
+    font-size: 1.1rem;
     border-radius: 3px;
     padding: 2px 8px;
     position: absolute;
@@ -509,10 +514,10 @@ html {
 }
 
 .court-header {
-    font-size: 1.2em;
+    font-size: 1.2rem;
     font-weight: bold;
     text-align: center;
-    margin-bottom: 10px; /* Adds some space between the header and the match details */
+    margin-bottom: 10px;
 }
 
 .resting {
@@ -521,7 +526,7 @@ html {
     align-items: center;
     margin: 10px 0;
     padding: 10px;
-    font-size: 1.5em;
+    font-size: 1.5rem;
     text-decoration: underline;
 }
 
