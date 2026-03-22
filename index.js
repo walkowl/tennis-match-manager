@@ -1,4 +1,4 @@
-const APP_VERSION_DATE = '2026-03-19 06:08';
+const APP_VERSION_DATE = '2026-03-23 10:55';
 
 let createMatchesButton = document.getElementById('create-matches');
 let isAnimating = false;
@@ -477,8 +477,12 @@ applyFontScale(fontScale);
 
 function applyFontScale(scale) {
     fontScale = Math.max(50, Math.min(200, scale));
-    document.documentElement.style.setProperty('--font-scale', (fontScale / 100).toString());
-    const display = document.getElementById('font-scale-display');
+    // Responsive base: scales from 14px at 320px viewport to 18px at 1120px+
+    // Equivalent to clamp(0.875rem, 0.75rem + 0.5vw, 1.125rem) but computed in JS for old Safari compat
+    var vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    var base = Math.min(Math.max(12 + 0.5 * vw / 100, 14), 18);
+    document.documentElement.style.fontSize = (base * fontScale / 100) + 'px';
+    var display = document.getElementById('font-scale-display');
     if (display) display.textContent = fontScale + '%';
     localStorage.setItem('fontScale', fontScale.toString());
 }

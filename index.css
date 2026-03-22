@@ -60,11 +60,7 @@ body::before {
     font-style: normal;
 }
 
-html {
-    /* Responsive base font size: scales from ~14px on small phones to ~18px on desktops.
-       The --font-scale custom property (set by JS) allows manual adjustment on top. */
-    font-size: calc(clamp(0.875rem, 0.75rem + 0.5vw, 1.125rem) * var(--font-scale, 1));
-}
+/* Responsive base font size is computed in JS (applyFontScale) for old browser compat */
 
 html, body {
     height: 100%; /* Ensure the html and body elements take up the full height */
